@@ -10,8 +10,17 @@ import groovy.json.JsonSlurper;
 class JMXGraphite {
     
 	def static main(args) {
-		def inputFile = new File("/home/nbenns/jmxgraphite/conf.json")
-		def config = new JsonSlurper().parseText(inputFile.text)
+		def conf = "/home/nbenns/jmxgraphite/conf.json";
+		def inputFile;
+		def config;
+		try {
+			inputFile = new File(conf);
+			config = new JsonSlurper().parseText(inputFile.text);
+		}
+		catch (Exception ex) {
+			println "Config File ${conf} not found or invalid JSON."
+			System.exit(1);
+		}
 		def JVMs = [];
 		
 		def interval = (config.interval != null) ? (config.interval * 1000) : 60 * 1000;
@@ -19,7 +28,8 @@ class JMXGraphite {
 		def graphite_port = (config.graphite_port != null) ? config.graphite_port : 2003;
 		
 		config.virtualmachines.each { v ->
-			JVMs.add(new JMXConnection(v.graphite_url, v.service_url, v.username, v.password, v.mbeans));
+			def j = new JMXConnection(v.graphite_url, v.service_url, v.username, v.password, v.mbeans);
+			JVMs.add(j);
 		}
 
 		while (true) {
@@ -40,10 +50,11 @@ class JMXGraphite {
 			
 			writer.flush()
 			writer.close()
-			println();
+			
 			def end = System.currentTimeMillis();
 			def dur = end - start;
-			
+			println dur;
+			println();
 			sleep(interval - dur)
 		}
 	}

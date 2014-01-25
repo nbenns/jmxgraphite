@@ -13,22 +13,22 @@ import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.rmi.ssl.SslRMIServerSocketFactory;
 
 class JMXConnection {
-    private JMXConnector connector;
-	private MBeanServerConnection connection;
-	private JMXServiceURL jmxUrl;
-	private Map<String, Object> m;
+    private JMXConnector Connector = null;
+	private MBeanServerConnection Connection;
+	private JMXServiceURL JMXUrl;
+	private Map<String, Object> ConnectionProperties;
 	private MBeans, Prefix;
 	
 	def JMXConnection(prefix, url, user, pass, mbeans) {
 		MBeans = mbeans;
 		Prefix = prefix;
 		
-		jmxUrl = new JMXServiceURL(url);
-		m = new HashMap<String,Object>();
+		JMXUrl = new JMXServiceURL(url);
+		ConnectionProperties = new HashMap<String,Object>();
 
 		if(user != null)
 		{
-			m.put(JMXConnector.CREDENTIALS, [user, pass] as String[]);
+			ConnectionProperties.put(JMXConnector.CREDENTIALS, [user, pass] as String[]);
 		}
 
 		// For SSL connections
@@ -36,102 +36,107 @@ class JMXConnection {
 		{
 			SslRMIClientSocketFactory csf = new SslRMIClientSocketFactory();
 			SslRMIServerSocketFactory ssf = new SslRMIServerSocketFactory();
-			m.put(RMIConnectorServer.RMI_CLIENT_SOCKET_FACTORY_ATTRIBUTE, csf);
-			m.put(RMIConnectorServer.RMI_SERVER_SOCKET_FACTORY_ATTRIBUTE, ssf);
-			m.put("com.sun.jndi.rmi.factory.socket", csf);
+			ConnectionProperties.put(RMIConnectorServer.RMI_CLIENT_SOCKET_FACTORY_ATTRIBUTE, csf);
+			ConnectionProperties.put(RMIConnectorServer.RMI_SERVER_SOCKET_FACTORY_ATTRIBUTE, ssf);
+			ConnectionProperties.put("com.sun.jndi.rmi.factory.socket", csf);
 		}
 
 		// This is for using External Jars for connecting to WebLogic, etc.
 		if (!System.getProperty("jmx.remote.protocol.provider.pkgs", "NULL").equals("NULL"))
 		{
-			m.put(JMXConnectorFactory.PROTOCOL_PROVIDER_PACKAGES, System.getProperty("jmx.remote.protocol.provider.pkgs"));
+			ConnectionProperties.put(JMXConnectorFactory.PROTOCOL_PROVIDER_PACKAGES, System.getProperty("jmx.remote.protocol.provider.pkgs"));
 		}
 	}
 	
-	private def Connect() {
-		for (int c = 0; c < 3; c++)
-		{
-			try {
-				connector = JMXConnectorFactory.connect(jmxUrl,m);
-				break;
-			}
-			catch (IOException ex) {
-				if (c < 2) continue;
-				else throw ex;
+	def Connect() {
+		def connected = false;
+		
+		try {
+		  Connector.getConnectionId();
+		  connected = true;
+		}
+		catch(Exception ex) {
+			for (int c = 0; c < 3; c++)
+			{
+				try {
+					Connector = JMXConnectorFactory.connect(JMXUrl, ConnectionProperties);
+					Connection = Connector.getMBeanServerConnection();
+
+					connected = true;
+					break;
+				}
+				catch (Exception ex2) {
+					if (c < 2) continue;
+				}
 			}
 		}
-
-		connection = connector.getMBeanServerConnection();
+		
+		return connected;
 	}
 	
 	private def Disconnect() {
-		if(connector != null)
+		if(Connector != null)
 		{
-			connector.close();
-			connector = null;
+			Connector.close();
+			//Connector = null;
 		}
 	}
 	
 	def Discover() {
 		def Output = [];
+		if (!Connect()) {
+			println ("Can't Connect to ${JMXUrl}")
+			Disconnect();
+			return;
+		}
 		
-		Connect();
-		
-		MBeans.each {oName, oAttrs ->
-			def obj = new ObjectName(oName);
-			def String[] tmpName1 = oName.toString().split(",");
-			def tmpName2 = [];
+		MBeans.each {MBName, MBAttrs ->
+			def obj = new ObjectName(MBName);
 			
-			tmpName1.each { s ->
-				def a = s.split('=');
-				tmpName2.add(a[0]);
-				tmpName2.add(a[1]);
-			};
+			def mBeans = Connection.queryNames(obj, null);
 			
-			//def objName = tmpName2[0].split(":")[0] + "." + tmpName2[1].replace('.', '_').replace(' ', '_');
-			//if (tmpName2.size() > 2) objName += ".${tmpName2[3].replace('.', '_').replace(' ', '_')}";
-		
-			def objName = tmpName2[0].split(":")[0];
-			tmpName2.eachWithIndex {t, i -> 
-				if (i % 2 == 1) objName += "." + t.replace('.', '_').replace(' ', '_');
-			}
-			
-			if (oAttrs instanceof HashMap) {
-				oAttrs.each {Attr, Comp ->
-					if (Attr == "attributes") {
-						Comp.each {attr ->
-							def value = connection.getAttribute(obj, attr);
-							def time = (int)(System.currentTimeMillis() / 1000);
+			mBeans.each { mb ->
+				def String[] tmpName1 = mb.toString().split(",");
+				def tmpName2 = [];
+				
+				tmpName1.each { s ->
+					def a = s.split('=');
+					tmpName2.addAll(a);
+				};
+							
+				def objName = tmpName2[0].split(":")[0];
+				tmpName2.eachWithIndex {t, i ->
+					if (i % 2 == 1) objName += "." + t.replace('.', '_').replace(' ', '_').replace('[', '.').replace(']', '');
+				}
+								
+				if (MBAttrs instanceof HashMap) {
+					MBAttrs.each {CDSName, CDSAttrs ->
+						if (CDSName == "attributes") {
+							try {
+								def values = Connection.getAttributes(mb, CDSAttrs as String[]);
+								def time = (int)(System.currentTimeMillis() / 1000);
 
-							Output.add("${Prefix}.${objName}.${attr} ${value} ${time}");
-						}  
-					}
-					else {
-						if (Comp instanceof HashMap) {
-							Comp.each {attr, val ->
-								if (val != null) {
-									println val;
-									
-									def comp = connection.getAttribute(obj, Attr);
-									def cds = comp[attr.toInteger()];
-									
-									val.each {v ->
-										def time = (int)(System.currentTimeMillis() / 1000);
-										def value = cds.get(v);
-											
-										Output.add("${Prefix}.${objName}.${Attr}.${attr}.${v} ${value} ${time}");
-									}
-									
+								values.each {javax.management.Attribute v ->
+									Output.add("${Prefix}.${objName}.${v.getName()} ${v.getValue()} ${time}");
 								}
+							}
+							catch (Exception ex) {
+								println "Type not compatible with configuration: ${mb.toString()} - ${CDSAttrs}"
 							}
 						}
 						else {
-							Comp.each {attr ->
-								def CompositeDataSupport cds = connection.getAttribute(obj, Attr);
+							try {
+								def CompositeDataSupport cds = Connection.getAttribute(mb, CDSName);
 								def time = (int)(System.currentTimeMillis() / 1000);
-								def value = cds.get(attr);
-						  
-								Output.add("${Prefix}.${objName}.${Attr}.${attr} ${value} ${time}");
+								def values = cds.getAll(CDSAttrs as String[])
+								
+								values.eachWithIndex {v,i ->
+									Output.add("${Prefix}.${objName}.${CDSName}.${CDSAttrs[i].toString()} ${v} ${time}");
+								}
+							}
+							catch (Exception ex) {
+								println "Type not found or not compatible with configuration: ${mb.toString()} - ${CDSName} - ${CDSAttrs}"
+								println ex;
 							}
 						}
 					}
@@ -139,8 +144,8 @@ class JMXConnection {
 			}
 		}
 		
-		Disconnect();
-		
 		return Output;
 	}
 }
+
+	
