@@ -19,7 +19,7 @@ class JMXConnection {
 	private Map<String, Object> ConnectionProperties;
 	private MBeans, Prefix;
 	
-	def JMXConnection(prefix, url, user, pass, mbeans) {
+	def JMXConnection(prefix, url, user, pass, ssl, provider, mbeans) {
 		MBeans = mbeans;
 		Prefix = prefix;
 		
@@ -32,7 +32,7 @@ class JMXConnection {
 		}
 
 		// For SSL connections
-		if (!System.getProperty("javax.net.ssl.trustStore", "NULL").equals("NULL"))
+		if (ssl != null)
 		{
 			SslRMIClientSocketFactory csf = new SslRMIClientSocketFactory();
 			SslRMIServerSocketFactory ssf = new SslRMIServerSocketFactory();
@@ -42,9 +42,9 @@ class JMXConnection {
 		}
 
 		// This is for using External Jars for connecting to WebLogic, etc.
-		if (!System.getProperty("jmx.remote.protocol.provider.pkgs", "NULL").equals("NULL"))
+		if (provider != null)
 		{
-			ConnectionProperties.put(JMXConnectorFactory.PROTOCOL_PROVIDER_PACKAGES, System.getProperty("jmx.remote.protocol.provider.pkgs"));
+			ConnectionProperties.put(JMXConnectorFactory.PROTOCOL_PROVIDER_PACKAGES, provider);
 		}
 	}
 	
@@ -74,7 +74,7 @@ class JMXConnection {
 		return connected;
 	}
 	
-	private def Disconnect() {
+	def Disconnect() {
 		if(Connector != null)
 		{
 			Connector.close();
@@ -106,7 +106,7 @@ class JMXConnection {
 							
 				def objName = tmpName2[0].split(":")[0];
 				tmpName2.eachWithIndex {t, i ->
-					if (i % 2 == 1) objName += "." + t.replace('.', '_').replace(' ', '_').replace('[', '.').replace(']', '');
+					if (i % 2 == 1) objName += "." + t.replace('.', '_').replace(' ', '_').replace('[', '.').replace(']', '').replace('"', '');
 				}
 								
 				if (MBAttrs instanceof HashMap) {
