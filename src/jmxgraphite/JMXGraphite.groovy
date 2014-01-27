@@ -40,6 +40,7 @@ class JMXGraphite {
 		def config;
 		
 		try {
+			println "Loading main config ${conf}";
 			inputFile = new File(conf);
 			config = new JsonSlurper().parseText(inputFile.text);
 		}
@@ -68,7 +69,7 @@ class JMXGraphite {
 				files.each{fname -> 
 					def f = new File("${inc}/${fname}");
 					
-					println "Loading ${inc}/${fname}";
+					println "Including config ${inc}/${fname}";
 					
 					if (f.exists()) {
 						try {
@@ -109,22 +110,27 @@ class JMXGraphite {
 		println "Interval: ${interval}"
 		while (true) {
 			def start = System.currentTimeMillis();
-			def requestSocket = new Socket(graphite_host, graphite_port);
-			def writer = new BufferedWriter(new OutputStreamWriter(requestSocket.getOutputStream()));
 			def Outputs = [];
 			
 			JVMs.each {jvm ->
-				Outputs.addAll(jvm.Discover());
+				def out = jvm.Discover();
+				if (out != null) Outputs.addAll(out);
 			}
 			
-			Outputs.each {o ->
-				println o;
-				writer.writeLine(o);
-				writer.flush();
-			};
+			if (Outputs.size() > 0) {
+				def requestSocket = new Socket(graphite_host, graphite_port);
+				def writer = new BufferedWriter(new OutputStreamWriter(requestSocket.getOutputStream()));
 			
-			writer.flush()
-			writer.close()
+				Outputs.each {o ->
+					println o;
+					writer.writeLine(o);
+					writer.flush();
+				};
+			
+				writer.flush()
+				writer.close()
+			}
+			else println "Nothing to write, skipping...";
 			
 			def end = System.currentTimeMillis();
 			def dur = end - start;

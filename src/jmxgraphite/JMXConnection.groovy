@@ -80,12 +80,12 @@ class JMXConnection {
 		if(Connector != null)
 		{
 			Connector.close();
-			//Connector = null;
 		}
 	}
 	
 	def Discover() {
 		def Output = [];
+		
 		if (!Connect()) {
 			println ("Can't Connect to ${JMXUrl}")
 			Disconnect();
@@ -94,8 +94,8 @@ class JMXConnection {
 		
 		MBeans.each {MBName, MBAttrs ->
 			def obj = new ObjectName(MBName);
-			
 			def mBeans
+			
 			try {
 				mBeans = Connection.queryNames(obj, null);
 			}
@@ -114,6 +114,7 @@ class JMXConnection {
 				};
 							
 				def objName = tmpName2[0].split(":")[0];
+				
 				tmpName2.eachWithIndex {t, i ->
 					if (i % 2 == 1) objName += "." + t.replace('.', '_').replace(' ', '_').replace('[', '.').replace(']', '').replace('"', '');
 				}
