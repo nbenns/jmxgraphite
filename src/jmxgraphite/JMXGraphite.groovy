@@ -78,6 +78,7 @@ class JMXGraphite {
 						}
 						catch (Exception ex) {
 							println "Invalid JSON in ${fname}";
+							println ex;
 						}
 					}
 					else {

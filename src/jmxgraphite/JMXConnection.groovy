@@ -11,6 +11,7 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.rmi.ssl.SslRMIServerSocketFactory;
+import javax.management.remote.rmi.RMIConnectorServer;
 
 class JMXConnection {
     private JMXConnector Connector = null;
@@ -67,6 +68,7 @@ class JMXConnection {
 				}
 				catch (Exception ex2) {
 					if (c < 2) continue;
+					println ex2;
 				}
 			}
 		}
@@ -93,7 +95,14 @@ class JMXConnection {
 		MBeans.each {MBName, MBAttrs ->
 			def obj = new ObjectName(MBName);
 			
-			def mBeans = Connection.queryNames(obj, null);
+			def mBeans
+			try {
+				mBeans = Connection.queryNames(obj, null);
+			}
+			catch (Exception ex) {
+				// WebLogic domainruntime service doesn't support queryNames
+				mBeans = [new ObjectName(MBName)]
+			}
 			
 			mBeans.each { mb ->
 				def String[] tmpName1 = mb.toString().split(",");
@@ -122,6 +131,7 @@ class JMXConnection {
 							}
 							catch (Exception ex) {
 								println "Type not compatible with configuration: ${mb.toString()} - ${CDSAttrs}"
+								println ex;
 							}
 						}
 						else {
