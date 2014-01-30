@@ -18,7 +18,17 @@
 	  <groupId>org.codehaus.groovy</groupId>
 	  <artifactId>groovy-all</artifactId>
 	  <version>2.1.5</version>
-    </dependency>      
+    </dependency>
+    <dependency>
+	  <groupId>ch.qos.logback</groupId>
+	  <artifactId>logback-classic</artifactId>
+	  <version>1.0.13</version>
+	</dependency>
+	<dependency>
+	  <groupId>org.slf4j</groupId>
+	  <artifactId>slf4j-api</artifactId>
+	  <version>1.7.5</version>
+	</dependency>                  
   </dependencies>
   
   <build>
@@ -60,7 +70,22 @@
         <extensions>true</extensions>
       </plugin>
       
-      
+      <plugin>
+    	<artifactId>maven-assembly-plugin</artifactId>
+    	<executions>
+      	  <execution>
+        	<phase>package</phase>
+        	<goals>
+          	  <goal>attached</goal>
+        	</goals>
+      	  </execution>
+    	</executions>
+    	<configuration>
+      	  <descriptorRefs>
+        	<descriptorRef>jar-with-dependencies</descriptorRef>
+      	  </descriptorRefs>
+    	</configuration>
+  	  </plugin>
     </plugins>
   </build>
 </project>

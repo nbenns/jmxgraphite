@@ -6,6 +6,8 @@ import groovy.io.FileType;
 import java.io.FilenameFilter;
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author nbenns
@@ -17,6 +19,7 @@ class JMXGraphite {
 	def static interval = 60 * 1000;
 	def static graphite_host = "localhost";
 	def static graphite_port = 2003;
+	def static Logger LOG = LoggerFactory.getLogger(JMXGraphite.class);
 	
 	def static parse(args) {
 		try {
@@ -30,7 +33,7 @@ class JMXGraphite {
 			}
 		}
 		catch (Exception ex) {
-			
+			LOG.trace("Exception parsing Startup Arguments", ex);
 		}
 		
 	}
@@ -40,12 +43,13 @@ class JMXGraphite {
 		def config;
 		
 		try {
-			println "Loading main config ${conf}";
+			LOG.info("Loading main config ${conf}");
 			inputFile = new File(conf);
 			config = new JsonSlurper().parseText(inputFile.text);
 		}
 		catch (Exception ex) {
-			println "Config File ${conf} not found or invalid JSON."
+			LOG.error("Config File ${conf} not found or invalid JSON.");
+			LOG.trace("Exception parsing Global Config", ex);
 			System.exit(1);
 		}
 		
@@ -69,7 +73,7 @@ class JMXGraphite {
 				files.each{fname -> 
 					def f = new File("${inc}/${fname}");
 					
-					println "Including config ${inc}/${fname}";
+					LOG.info("Including config ${inc}/${fname}");
 					
 					if (f.exists()) {
 						try {
@@ -78,42 +82,63 @@ class JMXGraphite {
 							JVMs.add(new JMXConnection(c.graphite_url, c.service_url, c.username, c.password, c.ssl, c.provider, c.mbeans));
 						}
 						catch (Exception ex) {
-							println "Invalid JSON in ${fname}";
-							println ex;
+							LOG.error("Invalid JSON in ${fname}");
+							LOG.trace("Exception parsing include ${fname}", ex);
 						}
 					}
 					else {
-						println "Include file ${fname} doesn't exist"; 
+						LOG.error("Include file ${fname} doesn't exist"); 
 					}
 				}
 			}
 			else {
-				println "Include folder ${inc} doesn't exist!";
+				LOG.warn("Include folder ${inc} doesn't exist!");
 			}
 		}
 	}
 	
 	def static main(args) {
+		def shutdown = false;
+		
 		parse(args);		
 		loadconfigs();
 
 		def handler;
 		Signal.handle( new Signal("HUP"), [ handle:{ sig ->
-			println "Caught SIGHUP, Reloading configs..."
+			LOG.info("Caught SIGHUP, Reloading configs...");
 			JVMs.each {jvm -> jvm.Disconnect()}
 			JVMs = [];
+
 			loadconfigs();
-			
+
 			if (handler) handler.handle(sig)
 		} ] as SignalHandler );
+	
+		Runtime.getRuntime().addShutdownHook((Thread)ProxyGenerator.instantiateAggregate([run: {
+			shutdown = true;
+			LOG.info("Shutdown initiated");
+			JVMs.each {jvm -> jvm.Disconnect() }
+			LOG.info("Shudown completed");
+		}
+		], [Runnable], Thread.class))
 		
-		println "Interval: ${interval}"
-		while (true) {
+		LOG.debug("Interval: ${interval}");
+		
+		while (!shutdown) {
 			def start = System.currentTimeMillis();
 			def Outputs = [];
 			
 			JVMs.each {jvm ->
-				def out = jvm.Discover();
+				def out;
+				
+				try {
+					out = jvm.Discover();
+				}
+				catch (Exception ex) {
+					LOG.error("Error getting data from JVM.");
+					LOG.trace("Exception calling jvm.Discover()", ex);
+				}
+				
 				if (out != null) Outputs.addAll(out);
 			}
 			
@@ -122,7 +147,7 @@ class JMXGraphite {
 				def writer = new BufferedWriter(new OutputStreamWriter(requestSocket.getOutputStream()));
 			
 				Outputs.each {o ->
-					println o;
+					LOG.debug(o);
 					writer.writeLine(o);
 					writer.flush();
 				};
@@ -130,13 +155,23 @@ class JMXGraphite {
 				writer.flush()
 				writer.close()
 			}
-			else println "Nothing to write, skipping...";
+			else LOG.debug("Nothing to write, skipping...");
 			
 			def end = System.currentTimeMillis();
 			def dur = end - start;
-			println "${Outputs.size()} metrics in ${dur} ms";
-			println("sleeping for ${interval - dur}");
-			sleep(interval - dur)
+			LOG.debug("${Outputs.size()} metrics in ${dur} ms");
+			
+			
+			def sleepTime = (interval - dur);
+			if (sleepTime >  0) {
+				LOG.debug("Sleeping for ${sleepTime} ms");
+			}
+			else {
+				LOG.warn("Operation time exceeded or equal to check interval - defaulting to 100ms sleep to prevent cpu saturation")
+				sleepTime = 100;
+			}
+			
+			sleep(sleepTime)
 		}
 	}
 }

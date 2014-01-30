@@ -1,0 +1,3 @@
+<configuration>
+  <include file="conf/logging.xml"/>
+</configuration>

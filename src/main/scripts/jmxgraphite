@@ -1,0 +1,143 @@
+# This is the init script for starting up jmxgraphite
+#
+# chkconfig: 345 91 10
+# description: JMXGraphite - monitoring of Java Applications.
+#
+# Source function library.
+. /etc/rc.d/init.d/functions
+# Get config.
+. /etc/sysconfig/network
+# Check that networking is up.
+[ "${NETWORKING}" = "no" ] && exit 0
+
+umask 002
+
+export JAVA_HOME=/etc/alternatives/java_sdk
+export APP_HOME=/opt/jmxgraphite
+export USER=jmxgraphite
+export GROUP=jmxgraphite
+export CONFIG=/etc/jmxgraphite.json
+
+CLASSPATH=$APP_HOME/conf
+CLASSPATH=$CLASSPATH:`echo $APP_HOME/lib/*.jar | tr ' ' ':'`
+export CLASSPATH
+
+[ ! -d "$APP_HOME/logs" ] && mkdir $APP_HOME/logs && chown $USER:$GROUP $APP_HOME/logs
+
+case "$1" in
+start)
+  [ -f $APP_HOME/java.conf ] && . $APP_HOME/java.conf >/dev/null
+  if [ -f "/var/run/jmxgraphite" ]
+  then
+    PID=$(cat /var/run/jmxgraphite)
+
+    if [ -d "/proc/$PID" -a ! -z "$PID" ]
+    then
+      echo "Process already running"
+      exit 1
+    else
+      echo "Process died previously"
+    fi
+  fi
+
+  echo -n "Starting jmxgraphite:"
+  PID=$(su - $USER -c "cd $APP_HOME;$JAVA_HOME/bin/java $JAVA_OPTS -cp $CLASSPATH jmxgraphite.JMXGraphite -c $CONFIG >/dev/null 2>&1 & echo \$!")
+
+  sleep 1 
+
+  if [ -d "/proc/$PID" ]
+  then
+    echo $PID > /var/run/jmxgraphite
+    success
+  else
+    [ -f /var/run/jmxgraphite ] && rm -f /var/run/jmxgraphite
+    failure
+  fi
+
+  echo
+;;
+stop)
+  echo -n "Stopping jmxgraphite:"
+
+  if [ -f "/var/run/jmxgraphite" ]
+  then
+    PID=$(cat /var/run/jmxgraphite)
+
+    if [ -d "/proc/$PID" -a ! -z "$PID" ]
+    then
+      kill "$PID"
+
+      COUNT=0
+      while [ -d "/proc/$PID" ]
+      do 
+        sleep 1
+        (( COUNT += 1 ))
+        if [ "$COUNT" -ge 120 ]
+        then
+          failure
+          echo "Process timed out"
+          exit 1
+        fi
+      done 
+      
+      [ -f /var/run/jmxgraphite ] && rm -f /var/run/jmxgraphite
+      success
+    else
+      [ -f /var/run/jmxgraphite ] && rm -f /var/run/jmxgraphite
+      echo -e "\tProcess died previously"
+    fi
+  else
+    failure
+    #echo "No file /var/run/jmxgraphite "
+    exit 1
+  fi
+
+  echo
+;;
+status)
+  if [ -f "/var/run/jmxgraphite" ]
+  then
+    PID=$(cat /var/run/jmxgraphite)
+
+    if [ -z "$PID" ]
+    then
+      echo "No PID in /var/run/jmxgraphite"
+      exit 1
+    fi
+
+    if [ -d "/proc/$PID" ]
+    then
+      echo "jmxgraphite (pid $PID) is running."
+    else
+      echo "jmxgraphite is not running."
+    fi
+  else
+    echo "jmxgraphite is not running."
+  fi
+;;
+reload)
+  if [ -f "/var/run/jmxgraphite" ]
+  then
+    PID=$(cat /var/run/jmxgraphite)
+
+    if [ -z "$PID" ]
+    then
+      echo "No PID in /var/run/jmxgraphite"
+      exit 1
+    fi
+
+    if [ -d "/proc/$PID" ]
+    then
+      echo "jmxgraphite (pid $PID) is reloading..."
+      kill -HUP $PID
+    else
+      echo "jmxgraphite is not running."
+    fi
+  else
+    echo "jmxgraphite is not running."
+  fi
+;;
+*)
+  echo "Usage: $0 start/stop/status"
+;;
+esac
