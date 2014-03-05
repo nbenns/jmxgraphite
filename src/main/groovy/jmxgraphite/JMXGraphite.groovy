@@ -57,28 +57,53 @@ class JMXGraphite {
 		if (config.graphite_host != null) graphite_host = config.graphite_host;
 		if (config.graphite_port != null) graphite_port = config.graphite_port;
 		
-		config.virtualmachines.each { v ->
-			JVMs.add(new JMXConnection(v.graphite_url, v.service_url, v.username, v.password, v.ssl, v.provider, v.mbeans));
-		}
+		def tmpl = config.templatedir;
 		
-		def inc = config.includedir;
+		def inc = config.jvmdir;
 		
 		if (inc != null) {
-			def dir = new File(inc);
+			def idir = new File(inc);
 			
-			if (dir.exists()) {
+			if (idir.exists()) {
 				def files = [];
-				files = dir.list( [accept:{d, f-> f ==~ /.*\.json$/ }] as FilenameFilter);
+				files = idir.list( [accept:{d, f-> f ==~ /.*\.json$/ }] as FilenameFilter);
 
-				files.each{fname -> 
+				files.each{ fname -> 
 					def f = new File("${inc}/${fname}");
 					
-					LOG.info("Including config ${inc}/${fname}");
+					LOG.info("Loading config ${inc}/${fname}");
 					
 					if (f.exists()) {
 						try {
 							def c = new JsonSlurper().parseText(f.text);
-						
+						    if (c.templates instanceof ArrayList) {
+								
+								c.templates.each{ t -> 
+									def tf = new File("${tmpl}/${t}.json");
+									  
+									if (tf.exists()) {
+										LOG.info("Including template ${t}");
+										
+										try {
+											def d = new JsonSlurper().parseText(tf.text);
+											
+											d.each{k,v ->
+												LOG.debug("Adding ${k}");
+												c.mbeans[k] = v
+											};
+										}
+										catch (Exception ex2) {
+											LOG.error("Invalid JSON in template ${t}.");
+											LOG.trace("Exception parsing template ${t}", ex2);
+										}
+									}
+									else {
+										LOG.warn("Template ${t} Not Found");
+									}
+								}	
+						    }
+							else LOG.info("No templates")
+							
 							JVMs.add(new JMXConnection(c.graphite_url, c.service_url, c.username, c.password, c.ssl, c.provider, c.mbeans));
 						}
 						catch (Exception ex) {
@@ -118,7 +143,6 @@ class JMXGraphite {
 			shutdown = true;
 			LOG.info("Shutdown initiated");
 			JVMs.each {jvm -> jvm.Disconnect() }
-			LOG.info("Shudown completed");
 		}
 		], [Runnable], Thread.class))
 		
@@ -173,5 +197,7 @@ class JMXGraphite {
 			
 			sleep(sleepTime)
 		}
+		
+		LOG.info("Shudown completed");
 	}
 }
