@@ -33,7 +33,7 @@ class JMXConnection {
 
 		if(user != null)
 		{
-			ConnectionProperties.put(JMXConnector.CREDENTIALS, [user, pass] as String[]);
+			ConnectionProperties.put(JMXConnector.CREDENTIALS, [user, Encryption.Decrypt(pass)] as String[]);
 		}
 
 		// For SSL connections

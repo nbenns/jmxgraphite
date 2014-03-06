@@ -2,6 +2,7 @@ package jmxgraphite;
 
 import java.io.ObjectInputStream.ValidationList;
 import groovy.json.JsonSlurper;
+import groovy.json.JsonBuilder;
 import groovy.io.FileType;
 import java.io.FilenameFilter;
 import sun.misc.Signal;
@@ -14,12 +15,15 @@ import org.slf4j.LoggerFactory;
  *
  */
 class JMXGraphite {
-    def static conf = "";
-	def static JVMs = [];
-	def static interval = 60 * 1000;
-	def static graphite_host = "localhost";
-	def static graphite_port = 2003;
-	def static Logger LOG = LoggerFactory.getLogger(JMXGraphite.class);
+    def static _globalConf = "conf/global.json";
+	def static _interval = 60 * 1000;
+	def static _graphiteHost = "localhost";
+	def static _graphitePort = 2003;
+	def static _templateDir = "templates";
+	def static _jvmDir = "jvms";
+	
+	def static _JVMs = [];
+	def static Logger _LOG = LoggerFactory.getLogger(JMXGraphite.class);
 	
 	def static parse(args) {
 		try {
@@ -28,150 +32,168 @@ class JMXGraphite {
 
 				if(option.equals("-c"))
 				{
-					conf = args[++i];
+					_globalConf = args[++i];
 				}
 			}
 		}
 		catch (Exception ex) {
-			LOG.trace("Exception parsing Startup Arguments", ex);
+			_LOG.trace("Exception parsing Startup Arguments", ex);
 		}
 		
 	}
 	
-	def static loadconfigs() {
-		def inputFile;
+	def static loadMainConfig() {
 		def config;
+		def inputFile = new File(_globalConf);
 		
-		try {
-			LOG.info("Loading main config ${conf}");
-			inputFile = new File(conf);
-			config = new JsonSlurper().parseText(inputFile.text);
+		if(inputFile.exists()) {
+			try {
+				_LOG.info("Loading main config ${_globalConf}");
+				config = new JsonSlurper().parseText(inputFile.text);
+			}
+			catch (Exception ex) {
+				_LOG.error("Config File ${_globalConf} invalid JSON.");
+				_LOG.trace("Exception parsing Global Config", ex);
+				System.exit(2);
+			}
 		}
-		catch (Exception ex) {
-			LOG.error("Config File ${conf} not found or invalid JSON.");
-			LOG.trace("Exception parsing Global Config", ex);
+		else {
+			_LOG.error("Config File ${_globalConf} not found.");
 			System.exit(1);
 		}
 		
-		if (config.interval != null) interval = config.interval * 1000;
-		if (config.graphite_host != null) graphite_host = config.graphite_host;
-		if (config.graphite_port != null) graphite_port = config.graphite_port;
-		
-		def tmpl = config.templatedir;
-		
-		def inc = config.jvmdir;
-		
-		if (inc != null) {
-			def idir = new File(inc);
+		if (config.interval != null) _interval = config.interval * 1000;
+		if (config.graphite_host != null) _graphiteHost = config.graphite_host;
+		if (config.graphite_port != null) _graphitePort = config.graphite_port;
+		if (config.templatedir != null) _templateDir = config.templatedir;
+		if (config.jvmdir != null) _jvmDir = config.jvmdir;
+	}
+	
+	def static loadJVMs() {
+		def jdir = new File(_jvmDir);
 			
-			if (idir.exists()) {
-				def files = [];
-				files = idir.list( [accept:{d, f-> f ==~ /.*\.json$/ }] as FilenameFilter);
+		if (jdir.exists()) {
+			def files = [];
+			files = jdir.list( [accept:{d, f-> f ==~ /.*\.json$/ }] as FilenameFilter);
 
-				files.each{ fname -> 
-					def f = new File("${inc}/${fname}");
+			files.each{ fname -> 
+				def f = new File("${_jvmDir}/${fname}");
 					
-					LOG.info("Loading config ${inc}/${fname}");
+				_LOG.info("Loading config ${_jvmDir}/${fname}");
 					
-					if (f.exists()) {
-						try {
-							def c = new JsonSlurper().parseText(f.text);
-						    if (c.templates instanceof ArrayList) {
-								
-								c.templates.each{ t -> 
-									def tf = new File("${tmpl}/${t}.json");
-									  
-									if (tf.exists()) {
-										LOG.info("Including template ${t}");
-										
-										try {
-											def d = new JsonSlurper().parseText(tf.text);
-											
-											d.each{k,v ->
-												LOG.debug("Adding ${k}");
-												c.mbeans[k] = v
-											};
-										}
-										catch (Exception ex2) {
-											LOG.error("Invalid JSON in template ${t}.");
-											LOG.trace("Exception parsing template ${t}", ex2);
-										}
-									}
-									else {
-										LOG.warn("Template ${t} Not Found");
-									}
-								}	
-						    }
-							else LOG.info("No templates")
+				try {
+					def c = new JsonSlurper().parseText(f.text);
+					
+					if (c.pass_encrypted != true) {
+						if (c.password != null) {
+							c.password = Encryption.Encrypt(c.password);
+							c.pass_encrypted = true;
 							
-							JVMs.add(new JMXConnection(c.graphite_url, c.service_url, c.username, c.password, c.ssl, c.provider, c.mbeans));
+							String newJson = new JsonBuilder(c).toPrettyString()
+							f.withWriter( 'UTF-8' ) { it << newJson }
+							
+							_LOG.info("Rewriting ${fname} with encrypted password.");
 						}
-						catch (Exception ex) {
-							LOG.error("Invalid JSON in ${fname}");
-							LOG.trace("Exception parsing include ${fname}", ex);
+						else {
+							_LOG.warn("No password for JVM ${fname} -- skipping");
+							return;
 						}
 					}
-					else {
-						LOG.error("Include file ${fname} doesn't exist"); 
-					}
+					
+				    if (c.templates instanceof ArrayList) {
+								
+						c.templates.each{ t -> 
+							def tf = new File("${_templateDir}/${t}.json");
+									  
+							if (tf.exists()) {
+								_LOG.info("Including template ${t}");
+										
+								try {
+									def d = new JsonSlurper().parseText(tf.text);
+											
+									d.each{k,v ->
+										_LOG.debug("Adding ${k}");
+										c.mbeans[k] = v
+									};
+								}
+								catch (Exception ex2) {
+									_LOG.error("Invalid JSON in template ${t}.");
+									_LOG.trace("Exception parsing template ${t}", ex2);
+								}
+							}
+							else {
+								_LOG.warn("Template ${t} Not Found");
+							}
+						}	
+				    }
+					else _LOG.info("No templates")
+							
+					_JVMs.add(new JMXConnection(c.graphite_prefix, c.service_url, c.username, c.password, c.ssl, c.provider, c.mbeans));
+				}
+				catch (Exception ex) {
+					_LOG.error("Invalid JSON in ${fname}");
+					_LOG.trace("Exception parsing include ${fname}", ex);
 				}
 			}
-			else {
-				LOG.warn("Include folder ${inc} doesn't exist!");
-			}
+		}
+		else {
+			_LOG.warn("Include folder ${_jvmDir} doesn't exist!");
 		}
 	}
 	
 	def static main(args) {
 		def shutdown = false;
 		
-		parse(args);		
-		loadconfigs();
+		parse(args);
+		loadMainConfig();		
+		loadJVMs();
 
 		def handler;
 		Signal.handle( new Signal("HUP"), [ handle:{ sig ->
-			LOG.info("Caught SIGHUP, Reloading configs...");
-			JVMs.each {jvm -> jvm.Disconnect()}
-			JVMs = [];
+			_LOG.info("Caught SIGHUP, Reloading configs...");
+			
+			_JVMs.each {jvm -> jvm.Disconnect()}
+			_JVMs = [];
 
-			loadconfigs();
+			loadMainConfig();
+			loadJVMs();
 
 			if (handler) handler.handle(sig)
 		} ] as SignalHandler );
 	
 		Runtime.getRuntime().addShutdownHook((Thread)ProxyGenerator.instantiateAggregate([run: {
 			shutdown = true;
-			LOG.info("Shutdown initiated");
-			JVMs.each {jvm -> jvm.Disconnect() }
+			_LOG.info("Shutdown initiated");
+			_JVMs.each {jvm -> jvm.Disconnect() }
 		}
 		], [Runnable], Thread.class))
 		
-		LOG.debug("Interval: ${interval}");
+		_LOG.debug("Interval: ${_interval}");
 		
 		while (!shutdown) {
 			def start = System.currentTimeMillis();
 			def Outputs = [];
 			
-			JVMs.each {jvm ->
+			_JVMs.each {jvm ->
 				def out;
 				
 				try {
 					out = jvm.Discover();
 				}
 				catch (Exception ex) {
-					LOG.error("Error getting data from JVM.");
-					LOG.trace("Exception calling jvm.Discover()", ex);
+					_LOG.error("Error getting data from JVM.");
+					_LOG.trace("Exception calling jvm.Discover()", ex);
 				}
 				
 				if (out != null) Outputs.addAll(out);
 			}
 			
 			if (Outputs.size() > 0) {
-				def requestSocket = new Socket(graphite_host, graphite_port);
+				def requestSocket = new Socket(_graphiteHost, _graphitePort);
 				def writer = new BufferedWriter(new OutputStreamWriter(requestSocket.getOutputStream()));
 			
 				Outputs.each {o ->
-					LOG.debug(o);
+					_LOG.debug(o);
 					writer.writeLine(o);
 					writer.flush();
 				};
@@ -179,25 +201,25 @@ class JMXGraphite {
 				writer.flush()
 				writer.close()
 			}
-			else LOG.debug("Nothing to write, skipping...");
+			else _LOG.debug("Nothing to write, skipping...");
 			
 			def end = System.currentTimeMillis();
 			def dur = end - start;
-			LOG.debug("${Outputs.size()} metrics in ${dur} ms");
+			_LOG.debug("${Outputs.size()} metrics in ${dur} ms");
 			
 			
-			def sleepTime = (interval - dur);
+			def sleepTime = (_interval - dur);
 			if (sleepTime >  0) {
-				LOG.debug("Sleeping for ${sleepTime} ms");
+				_LOG.debug("Sleeping for ${sleepTime} ms");
 			}
 			else {
-				LOG.warn("Operation time exceeded or equal to check interval - defaulting to 100ms sleep to prevent cpu saturation")
+				_LOG.warn("Operation time exceeded or equal to check interval - defaulting to 100ms sleep to prevent cpu saturation")
 				sleepTime = 100;
 			}
 			
 			sleep(sleepTime)
 		}
 		
-		LOG.info("Shudown completed");
+		_LOG.info("Shudown completed");
 	}
 }
