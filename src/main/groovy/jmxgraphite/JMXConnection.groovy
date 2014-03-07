@@ -1,5 +1,8 @@
 package jmxgraphite
 
+import groovy.json.JsonSlurper;
+import groovy.json.JsonBuilder;
+import java.lang.Thread;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.OperationsException;
@@ -15,84 +18,169 @@ import javax.management.remote.rmi.RMIConnectorServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class JMXConnection {
-	def static Logger LOG = LoggerFactory.getLogger(JMXGraphite.class);
+class JMXConnection extends Thread {
+	def static Logger _LOG = LoggerFactory.getLogger(JMXGraphite.class);
+	private _templateDir = "";
+	private _interval = 60*1000;
 	
-    private JMXConnector Connector = null;
-	private MBeanServerConnection Connection;
-	private JMXServiceURL JMXUrl;
-	private Map<String, Object> ConnectionProperties;
-	private MBeans, Prefix;
+    private JMXConnector _Connector = null;
+	private MBeanServerConnection _Connection;
+	private JMXServiceURL _JMXUrl;
+	private Map<String, Object> _ConnectionProperties;
+	private _MBeans, _Prefix;
 	
-	def JMXConnection(prefix, url, user, pass, ssl, provider, mbeans) {
-		MBeans = mbeans;
-		Prefix = prefix;
+	def private LoadConfig(fname) {
+		def f = new File(fname);
 		
-		JMXUrl = new JMXServiceURL(url);
-		ConnectionProperties = new HashMap<String,Object>();
+		try {
+			def c = new JsonSlurper().parseText(f.text);
+			
+			_interval = c.interval * 1000;
+			
+			if (c.pass_encrypted != true) {
+				if (c.password != null) {
+					c.password = Encryption.Encrypt(c.password);
+					c.pass_encrypted = true;
+					
+					String newJson = new JsonBuilder(c).toPrettyString()
+					f.withWriter( 'UTF-8' ) { it << newJson }
+					
+					_LOG.info("Rewriting ${fname} with encrypted password.");
+				}
+				else {
+					_LOG.warn("No password for JVM ${fname} -- skipping");
+					return;
+				}
+			}
+			
+			if (c.templates instanceof ArrayList) {
+						
+				c.templates.each{ t ->
+					def tf = new File("${_templateDir}/${t}.json");
+							  
+					if (tf.exists()) {
+						_LOG.info("Including template ${t}");
+								
+						try {
+							def d = new JsonSlurper().parseText(tf.text);
+									
+							d.each{k,v ->
+								_LOG.debug("Adding ${k}");
+								c.mbeans[k] = v
+							};
+						}
+						catch (Exception ex2) {
+							_LOG.error("Invalid JSON in template ${t}.");
+							_LOG.trace("Exception parsing template ${t}", ex2);
+						}
+					}
+					else {
+						_LOG.warn("Template ${t} Not Found");
+					}
+				}
+			}
+			else _LOG.info("No templates")
+					
+			_MBeans = c.mbeans;
+			_Prefix = c.graphite_prefix;
+		
+			_JMXUrl = new JMXServiceURL(c.service_url);
+			_ConnectionProperties = new HashMap<String,Object>();
 
-		if(user != null)
-		{
-			ConnectionProperties.put(JMXConnector.CREDENTIALS, [user, Encryption.Decrypt(pass)] as String[]);
+			if(c.username != null)
+			{
+				_ConnectionProperties.put(JMXConnector.CREDENTIALS, [c.username, Encryption.Decrypt(c.password)] as String[]);
+			}
+
+			// For SSL connections
+			if (c.ssl != null)
+			{
+				SslRMIClientSocketFactory csf = new SslRMIClientSocketFactory();
+				SslRMIServerSocketFactory ssf = new SslRMIServerSocketFactory();
+				_ConnectionProperties.put(RMIConnectorServer.RMI_CLIENT_SOCKET_FACTORY_ATTRIBUTE, csf);
+				_ConnectionProperties.put(RMIConnectorServer.RMI_SERVER_SOCKET_FACTORY_ATTRIBUTE, ssf);
+				_ConnectionProperties.put("com.sun.jndi.rmi.factory.socket", csf);
+			}
+
+			// This is for using External Jars for connecting to WebLogic, etc.
+			if (c.provider != null)
+			{
+				_ConnectionProperties.put(JMXConnectorFactory.PROTOCOL_PROVIDER_PACKAGES, c.provider);
+			}
 		}
-
-		// For SSL connections
-		if (ssl != null)
-		{
-			SslRMIClientSocketFactory csf = new SslRMIClientSocketFactory();
-			SslRMIServerSocketFactory ssf = new SslRMIServerSocketFactory();
-			ConnectionProperties.put(RMIConnectorServer.RMI_CLIENT_SOCKET_FACTORY_ATTRIBUTE, csf);
-			ConnectionProperties.put(RMIConnectorServer.RMI_SERVER_SOCKET_FACTORY_ATTRIBUTE, ssf);
-			ConnectionProperties.put("com.sun.jndi.rmi.factory.socket", csf);
-		}
-
-		// This is for using External Jars for connecting to WebLogic, etc.
-		if (provider != null)
-		{
-			ConnectionProperties.put(JMXConnectorFactory.PROTOCOL_PROVIDER_PACKAGES, provider);
+		catch (Exception ex) {
+			_LOG.error("Invalid JSON in ${fname}");
+			_LOG.trace("Exception parsing include ${fname}", ex);
 		}
 	}
 	
-	def Connect() {
+	def JMXConnection(name, tmplDir, f) {
+		this.setName(name);
+		_templateDir = tmplDir;
+		
+		_LOG.info("Loading config for ${name}");
+		LoadConfig(f);
+	}
+
+	def void run() {
+		_LOG.info("Check Interval: ${_interval}")
+		
+		while (true) {
+			def start = System.currentTimeMillis();
+			def out = Discover();
+			
+			if (out instanceof ArrayList) JMXGraphite.sendUpdate(out);
+			else out = [];
+			
+			def end = System.currentTimeMillis();
+			def dur = end - start;
+			
+			_LOG.info("Retrieved ${out.size()} metrics in ${dur} ms");
+			
+			sleep(_interval - dur);
+		}
+	}
+	
+	def private Connect() {
 		def connected = false;
 		
-		if (Connector == null) {
+		if (_Connector == null) {
 			try {
-				LOG.info("Connecting to ${JMXUrl}");
-				Connector = JMXConnectorFactory.connect(JMXUrl, ConnectionProperties);
-				Connection = Connector.getMBeanServerConnection();
-				LOG.info("Connected Successfully.");
+				_LOG.info("Connecting to ${_JMXUrl}");
+				_Connector = JMXConnectorFactory.connect(_JMXUrl, _ConnectionProperties);
+				_Connection = _Connector.getMBeanServerConnection();
+				_LOG.info("Connected Successfully.");
 			}
 			catch (Exception ex) {
-				LOG.debug("Can't get initial connection to ${JMXUrl}");
-				LOG.trace("Exception calling getMBeanServerConnection():", ex);
+				_LOG.debug("Can't get initial connection to ${_JMXUrl}");
+				_LOG.trace("Exception calling getMBeanServerConnection():", ex);
 				return false;
 			}
 		}
 		
 		try {
-			Connection.getMBeanCount();
+			_Connection.getMBeanCount();
 			connected = true;
 		}
 		catch(Exception ex) {
-			LOG.info("Got disconnected from ${JMXUrl}");
-			LOG.trace("Exception calling getMBeanCount()", ex);
+			_LOG.info("Got disconnected from ${_JMXUrl}");
+			_LOG.trace("Exception calling getMBeanCount()", ex);
 			
 			for (int c = 1; c < 4; c++)
 			{
-				LOG.info("Reconnecting to ${JMXUrl}, try #${c}");
+				_LOG.info("Reconnecting to ${_JMXUrl}, try #${c}");
 				try {
-					Connector.connect(ConnectionProperties);
+					_Connector.connect(ConnectionProperties);
 					connected = true;
-					LOG.info("Reconnected Successfully.");
+					_LOG.info("Reconnected Successfully.");
 					break;
 				}
 				catch (Exception ex2) {
-					LOG.warn("Unable to Connect to ${JMXUrl}");
-					LOG.trace("Exception while connecting:", ex2);
+					_LOG.warn("Unable to Connect to ${_JMXUrl}");
+					_LOG.trace("Exception while connecting:", ex2);
 					if (c < 3) {
 						def backoff = Math.pow(10, c);
-						LOG.info("Backing off ${(int)backoff} ms");
+						_LOG.info("Backing off ${(int)backoff} ms");
 						sleep((long)backoff);
 					}
 				}
@@ -102,41 +190,41 @@ class JMXConnection {
 		return connected;
 	}
 	
-	def Disconnect() {
-		if(Connector != null)
+	def private Disconnect() {
+		if(_Connector != null)
 		{
-			LOG.info("Disconnecting from ${JMXUrl}");
+			_LOG.info("Disconnecting from ${_JMXUrl}");
 			try {
-				Connector.close();
+				_Connector.close();
 			}
 			catch (Exception ex) {
-				LOG.trace("Exception while disconnecting:", ex);
+				_LOG.trace("Exception while disconnecting:", ex);
 			}
 			finally {
-				Connector = null;
+				_Connector = null;
 			}
 		}
 	}
 	
-	def Discover() {
+	def private Discover() {
 		def Output = [];
 		
 		if (!Connect()) {
-			LOG.warn("Can't Connect to ${JMXUrl}");
+			_LOG.warn("Can't Connect to ${_JMXUrl}");
 			Disconnect();
 			return;
 		}
 		
-		MBeans.each {MBName, MBAttrs ->
+		_MBeans.each {MBName, MBAttrs ->
 			def obj = new ObjectName(MBName);
 			def mBeans
 			
 			try {
-				mBeans = Connection.queryNames(obj, null);
+				mBeans = _Connection.queryNames(obj, null);
 			}
 			catch (Exception ex) {
 				// WebLogic domainruntime service doesn't support queryNames
-				LOG.trace("Exception on queryNames():", ex)
+				_LOG.trace("Exception on queryNames():", ex)
 				mBeans = [new ObjectName(MBName)]
 			}
 			
@@ -159,34 +247,34 @@ class JMXConnection {
 					MBAttrs.each {CDSName, CDSAttrs ->
 						if (CDSName == "attributes") {
 							try {
-								def values = Connection.getAttributes(mb, CDSAttrs as String[]);
+								def values = _Connection.getAttributes(mb, CDSAttrs as String[]);
 								def time = (int)(System.currentTimeMillis() / 1000);
 
 								values.each {javax.management.Attribute v ->
-									Output.add("${Prefix}.${objName}.${v.getName()} ${v.getValue()} ${time}");
+									Output.add("${_Prefix}.${objName}.${v.getName()} ${v.getValue()} ${time}");
 								}
 							}
 							catch (Exception ex) {
-								LOG.error("Type not compatible with configuration: ${mb.toString()} - ${CDSAttrs}");
-								LOG.trace("Printing StackTrace:", ex);
+								_LOG.error("Type not compatible with configuration: ${mb.toString()} - ${CDSAttrs}");
+								_LOG.trace("Printing StackTrace:", ex);
 							}
 						}
 						else {
 							try {
-								def CompositeDataSupport cds = Connection.getAttribute(mb, CDSName);
+								def CompositeDataSupport cds = _Connection.getAttribute(mb, CDSName);
 								if (cds != null) {
 									def time = (int)(System.currentTimeMillis() / 1000);
 									def values = cds.getAll(CDSAttrs as String[])
 								
 									values.eachWithIndex {v,i ->
-										Output.add("${Prefix}.${objName}.${CDSName}.${CDSAttrs[i].toString()} ${v} ${time}");
+										Output.add("${_Prefix}.${objName}.${CDSName}.${CDSAttrs[i].toString()} ${v} ${time}");
 									}
 								}
-								else LOG.debug("CompositeDataSupport ${mb.toString()} - ${CDSName} is NULL")
+								else _LOG.debug("CompositeDataSupport ${mb.toString()} - ${CDSName} is NULL")
 							}
 							catch (Exception ex) {
-								LOG.error("Type not found or not compatible with configuration: ${mb.toString()} - ${CDSName} - ${CDSAttrs}");
-								LOG.trace("Printing StackTrace:", ex);
+								_LOG.error("Type not found or not compatible with configuration: ${mb.toString()} - ${CDSName} - ${CDSAttrs}");
+								_LOG.trace("Printing StackTrace:", ex);
 							}
 						}
 					}
