@@ -263,7 +263,7 @@ class JMXConnection extends Thread {
 								}
 							}
 							catch (Exception ex) {
-								_LOG.error("Type not compatible with configuration: ${mb.toString()} - ${CDSAttrs}");
+								_LOG.warn("Type not compatible with configuration: ${mb.toString()} - ${CDSAttrs}");
 								_LOG.trace("Printing StackTrace:", ex);
 							}
 						}
