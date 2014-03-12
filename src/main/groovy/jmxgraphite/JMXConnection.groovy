@@ -2,9 +2,11 @@ package jmxgraphite
 
 import groovy.json.JsonSlurper;
 import groovy.json.JsonBuilder;
+import java.util.regex.Matcher;
 import java.lang.Thread;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
+import javax.management.Query;
 import javax.management.OperationsException;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.CompositeDataSupport;
@@ -28,6 +30,7 @@ class JMXConnection extends Thread {
 	private JMXServiceURL _JMXUrl;
 	private Map<String, Object> _ConnectionProperties;
 	private _MBeans, _Prefix;
+	private _allMBeans = null;
 	
 	def private LoadConfig(fname) {
 		def f = new File(fname);
@@ -123,7 +126,7 @@ class JMXConnection extends Thread {
 	}
 
 	def void run() {
-		_LOG.info("Check Interval: ${_interval}")
+		_LOG.info("Check Interval: ${_interval}");
 		
 		while (true) {
 			def start = System.currentTimeMillis();
@@ -215,6 +218,9 @@ class JMXConnection extends Thread {
 			return;
 		}
 		
+		// Pre-load just in case queryNames doesn't support "*" 
+		if (_allMBeans == null) _allMBeans = _Connection.queryNames(new ObjectName(""), null);
+		
 		_MBeans.each {MBName, MBAttrs ->
 			def obj = new ObjectName(MBName);
 			def mBeans
@@ -223,9 +229,11 @@ class JMXConnection extends Thread {
 				mBeans = _Connection.queryNames(obj, null);
 			}
 			catch (Exception ex) {
-				// WebLogic domainruntime service doesn't support queryNames
+				// WebLogic domainruntime service doesn't support queryNames with "*"
+				// we need to use "" and then find the names ourselves :(
 				_LOG.trace("Exception on queryNames():", ex)
-				mBeans = [new ObjectName(MBName)]
+				def q = MBName.replaceAll(/\*/,'.*');
+				mBeans = _allMBeans.grep(~/${q}/);
 			}
 			
 			mBeans.each { mb ->
@@ -240,7 +248,7 @@ class JMXConnection extends Thread {
 				def objName = tmpName2[0].split(":")[0];
 				
 				tmpName2.eachWithIndex {t, i ->
-					if (i % 2 == 1) objName += "." + t.replace('.', '_').replace(' ', '_').replace('[', '.').replace(']', '').replace('"', '');
+					if (i % 2 == 1) objName += "." + t.replace('.', '_').replace(' ', '_').replace('[', '').replace(']', '').replace('"', '');
 				}
 								
 				if (MBAttrs instanceof HashMap) {
