@@ -1,0 +1,11 @@
+{
+	"graphite_prefix": "apps.udeploy.nonprod.tor-ovn-0022_loyalty_com",
+	"service_url": "service:jmx:rmi:///jndi/rmi://localhost:9000/jmxrmi",
+    "username": "monitor",
+    "password": "monitor",
+    "interval": 10,
+    "templates": ["java", "tomcat"],
+	"mbeans": {
+        
+    }
+}

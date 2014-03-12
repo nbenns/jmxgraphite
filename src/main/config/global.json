@@ -1,0 +1,7 @@
+{
+  "graphite_host": "localhost",
+  "graphite_port": 2003,
+  "send_interval": 2,
+  "templatedir": "/opt/jmxgraphite/templates",
+  "jvmdir": "/opt/jmxgraphite/jvms"
+}

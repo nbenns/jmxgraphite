@@ -1,0 +1,158 @@
+{
+  "Catalina:type=Cache,host=*,path=*": {
+    "attributes": [
+      "accessCount",
+      "cacheMaxSize",
+      "cacheSize",
+      "desiredEntryAccessRatio",
+      "hitsCount",
+      "maxAllocateIterations",
+      "spareNotFoundEntries"
+    ]
+  },
+  "Catalina:type=Connector,port=*,address=*": {
+    "attributes": [
+      "acceptCount",
+      "bufferSize",
+      "connectionLinger",
+      "connectionTimeout",
+      "connectionUploadTimeout",
+      "maxHttpHeaderSize",
+      "maxKeepAliveRequests",
+      "maxPostSize",
+      "maxSpareThreads",
+      "maxThreads",
+      "minSpareThreads",
+      "threadPriority",
+    ]
+  },
+  "Catalina:type=GlobalRequestProcessor,name=*": {
+    "attributes": [
+      "bytesReceived",
+      "bytesSent",
+      "errorCount",
+      "maxTime",
+      "processingTime",
+      "requestCount",
+    ]
+  },
+  "Catalina:type=JspMonitor,name=jsp,WebModule=*,J2EEApplication=*,J2EEServer=*": {
+    "attributes": [
+      "jspCount",
+      "jspReloadCount"
+    ]
+  },
+  "Catalina:type=Manager,path=*,host=*": {
+    "attributes": [
+      "activeSessions",
+      "duplicates",
+      "expiredSessions",
+      "maxActive",
+      "maxActiveSessions",
+      "maxInactiveInterval",
+      "processExpiresFrequency",
+      "processingTime",
+      "rejectedSessions",
+      "sessionAverageAliveTime",
+      "sessionCounter",
+      "sessionCreateRate",
+      "sessionExpireRate",
+      "sessionIdLength",
+      "sessionMaxAliveTime"
+    ]
+  },
+  "Catalina:type=ProtocolHandler,port=*,address=*": {
+    "attributes": [
+      "backlog",
+      "compressionMinSize",
+      "maxHttpHeaderSize",
+      "maxKeepAliveRequests",
+      "maxSavePostSize",
+      "maxThreads",
+      "soLinger",
+      "soTimeout",
+      "socketBuffer",
+      "threadPriority",
+      "timeout",
+      "unlockTimeout"
+    ]
+  },
+  "Catalina:type=RequestProcessor,worker=*,name=*": {
+    "attributes": [
+      "bytesReceived",
+      "bytesSent",
+      "contentLength",
+      "errorCount",
+      "lastRequestProcessingTime",
+      "maxTime",
+      "processingTime",
+      "requestBytesReceived",
+      "requestBytesSent",
+      "requestCount",
+      "requestProcessingTime",
+      "stage"
+    ]
+  },
+  "Catalina:type=ThreadPool,name=*": {
+    "attributes": [
+      "acceptorThreadCount",
+      "backlog",
+      "currentThreadCount",
+      "currentThreadsBusy",
+      "maxThreads",
+      "soLinger",
+      "soTimeout",
+      "threadPriority",
+      "unlockTimeout"
+    ]
+  },
+  "com.mchange.v2.c3p0:type=PooledDataSource*": {
+    "attributes": [
+      "acquireIncrement",
+      "acquireRetryAttempts",
+      "acquireRetryDelay",
+      "checkoutTimeout",
+      "effectivePropertyCycleDefaultUser",
+      "idleConnectionTestPeriod",
+      "initialPoolSize",
+      "loginTimeout",
+      "maxAdministrativeTaskTime",
+      "maxConnectionAge",
+      "maxIdleTime",
+      "maxIdleTimeExcessConnections",
+      "maxPoolSize",
+      "maxStatements",
+      "maxStatementsPerConnection",
+      "minPoolSize",
+      "numBusyConnections",
+      "numBusyConnectionsAllUsers",
+      "numBusyConnectionsDefaultUser",
+      "numFailedCheckinsDefaultUser",
+      "numFailedCheckoutsDefaultUser",
+      "numFailedIdleTestsDefaultUser",
+      "numHelperThreads",
+      "numIdleConnections",
+      "numIdleConnectionsAllUsers",
+      "numIdleConnectionsDefaultUser",
+      "numThreadsAwaitingCheckoutDefaultUser",
+      "numUnclosedOrphanedConnections",
+      "numUnclosedOrphanedConnectionsAllUsers",
+      "numUnclosedOrphanedConnectionsDefaultUser",
+      "numUserPools",
+      "propertyCycle",
+      "startTimeMillisDefaultUser",
+      "statementCacheNumCheckedOutDefaultUser",
+      "statementCacheNumCheckedOutStatementsAllUsers",
+      "statementCacheNumConnectionsWithCachedStatementsAllUsers",
+      "statementCacheNumConnectionsWithCachedStatementsDefaultUser",
+      "statementCacheNumStatementsAllUsers",
+      "statementCacheNumStatementsDefaultUser",
+      "threadPoolNumActiveThreads",
+      "threadPoolNumIdleThreads",
+      "threadPoolNumTasksPending",
+      "threadPoolSize",
+      "unreturnedConnectionTimeout",
+      "upTimeMillisDefaultUser"
+    ]
+  }
+}

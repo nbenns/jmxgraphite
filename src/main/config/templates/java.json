@@ -1,0 +1,62 @@
+{
+  "java.lang:type=Memory": {
+    "HeapMemoryUsage": [ "committed", "init", "max", "used" ],
+    "NonHeapMemoryUsage": [ "committed", "init", "max", "used" ],
+
+    "attributes": [
+      "ObjectPendingFinalizationCount"
+    ]
+  },
+  "java.lang:type=MemoryPool,name=*": {
+    "PeakUsage": [ "committed", "init", "max", "used" ],
+    "Usage": [ "committed", "init", "max", "used" ],
+
+    "attributes": [
+      "UsageThreshold",
+      "UsageThresholdCount"
+    ]
+  },
+  "java.lang:type=GarbageCollector,name=*": {
+    "LastGcInfo": [ "GcThreadCount", "duration", "startTime", "endTime", "id" ], 
+    "attributes": [
+      "CollectionCount",
+      "CollectionTime"
+    ]
+  },
+  "java.lang:type=ClassLoading": {
+    "attributes": [
+      "LoadedClassCount",
+      "TotalLoadedClassCount",
+      "UnloadedClassCount"
+    ]
+  },
+  "java.lang:type=Compilation": {
+    "attributes": [
+      "TotalCompilationTime"
+    ]
+  },
+  "java.lang:type=Threading": {
+    "attributes": [
+      "CurrentThreadCpuTime",
+      "CurrentThreadUserTime",
+      "DaemonThreadCount",
+      "PeakThreadCount",
+      "ThreadCount",
+      "TotalStartedThreadCount"
+    ]
+  },
+  "java.lang:type=OperatingSystem": {
+    "attributes": [
+      "AvailableProcessors",
+      "CommittedVirtualMemorySize",
+      "FreePhysicalMemorySize",
+      "FreeSwapSpaceSize",
+      "MaxFileDescriptorCount",
+      "OpenFileDescriptorCount",
+      "ProcessCpuTime",
+      "SystemLoadAverage",
+      "TotalPhysicalMemorySize",
+      "TotalSwapSpaceSize"
+    ]
+  }
+}
