@@ -270,7 +270,8 @@ class JMXConnection extends Thread {
 						else {
 							try {
 								def CompositeDataSupport cds = _Connection.getAttribute(mb, CDSName);
-								if (cds != null) {
+							
+								try {
 									def time = (int)(System.currentTimeMillis() / 1000);
 									def values = cds.getAll(CDSAttrs as String[])
 								
@@ -278,10 +279,26 @@ class JMXConnection extends Thread {
 										Output.add("${_Prefix}.${objName}.${CDSName}.${CDSAttrs[i].toString()} ${v} ${time}");
 									}
 								}
-								else _LOG.debug("CompositeDataSupport ${mb.toString()} - ${CDSName} is NULL")
+								catch (Exception ex1) {
+									_LOG.warn("All properties not found getting individually: ${mb.toString()} - ${CDSName} - ${CDSAttrs}");
+									_LOG.trace("Printing StackTrace:", ex1);
+									
+									def time = (int)(System.currentTimeMillis() / 1000);
+									
+									CDSAttrs.each { a ->
+										try {
+											def v = cds.get(a);
+											Output.add("${_Prefix}.${objName}.${CDSName}.${a.toString()} ${v} ${time}");
+										}
+										catch (Exception ex2) {
+											_LOG.warn("Type not found or not compatible with configuration: ${mb.toString()} - ${CDSName} - ${a}");
+											_LOG.trace("Printing StackTrace:", ex2);
+										}
+									}
+								}
 							}
 							catch (Exception ex) {
-								_LOG.error("Type not found or not compatible with configuration: ${mb.toString()} - ${CDSName} - ${CDSAttrs}");
+								_LOG.warn("Type not found or not compatible with configuration: ${mb.toString()} - ${CDSName}");
 								_LOG.trace("Printing StackTrace:", ex);
 							}
 						}
