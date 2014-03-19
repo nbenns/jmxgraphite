@@ -9,14 +9,13 @@
 . /etc/sysconfig/network
 # Check that networking is up.
 [ "${NETWORKING}" = "no" ] && exit 0
-
 umask 002
 
 export JAVA_HOME=/etc/alternatives/java_sdk
 export APP_HOME=/opt/jmxgraphite
 export USER=jmxgraphite
 export GROUP=jmxgraphite
-export CONFIG=/etc/jmxgraphite.json
+export CONFIG=/opt/jmxgraphite/conf/global.json
 
 CLASSPATH=$APP_HOME/conf
 CLASSPATH=$CLASSPATH:`echo $APP_HOME/lib/*.jar | tr ' ' ':'`
@@ -41,7 +40,7 @@ start)
   fi
 
   echo -n "Starting jmxgraphite:"
-  PID=$(su - $USER -c "cd $APP_HOME;$JAVA_HOME/bin/java $JAVA_OPTS -cp $CLASSPATH jmxgraphite.JMXGraphite -c $CONFIG >/dev/null 2>&1 & echo \$!")
+  PID=$(su - $USER -c "cd $APP_HOME;$JAVA_HOME/bin/java $JAVA_OPTS -cp $CLASSPATH jmxgraphite.JMXGraphite -c $CONFIG > $APP_HOME/logs/stdOut.log 2>&1 & echo \$!")
 
   sleep 1 
 

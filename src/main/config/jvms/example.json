@@ -1,11 +1,11 @@
 {
-	"graphite_prefix": "apps.app1.jvm1",
-	"service_url": "service:jmx:rmi:///jndi/rmi://localhost:9000/jmxrmi",
-    "username": "monitor",
-    "password": "monitor",
-    "interval": 10,
-    "templates": ["java", "tomcat"],
-	"mbeans": {
+  "graphite_prefix": "apps.app1.jvm1",
+  "service_url": "service:jmx:rmi:///jndi/rmi://localhost:9000/jmxrmi",
+  "username": "monitor",
+  "password": "monitor",
+  "interval": 10,
+  "templates": ["java", "tomcat"],
+  "mbeans": {
         
-    }
+  }
 }
