@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>jmxgraphite</groupId>
   <artifactId>jmxgraphite</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>JMXGraphite</name>
   <description>Send JMX Metrics directly to a Graphite instance over Line protocol</description>
   <packaging>jar</packaging>

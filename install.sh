@@ -14,9 +14,9 @@ base="${prefix}/jmxgraphite"
 mkdir -p ${prefix}/jmxgraphite/{bin,conf,lib,logs}
 cp -rf src/main/config/{jvms,templates} ${base}
 
-find src/main/config -maxdepth 1 -type f |xargs -I{} -n1 cp {} ${base}/conf
+find src/main/config -maxdepth 1 -type f | xargs -I{} -n1 cp {} ${base}/conf
 
-find src/main/scripts -maxdepth 1 -type f |xargs -I{} -n1 cp {} ${base}/bin
+find src/main/scripts -maxdepth 1 -type f | xargs -I{} -n1 cp {} ${base}/bin
 
 cp target/jmxgraphite-*-jar-with-dependencies.jar ${base}/lib
 
