@@ -1,3 +1,5 @@
+%define debug_package %{nil}
+%define __find_requires %{nil}
 Name:		jmxgraphite
 Version:	1.0.0
 Release:	1
