@@ -49,6 +49,7 @@ chmod +x %{buildroot}/etc/init.d/jmxgraphite
 %config %verify(not owner group size md5 mtime) /opt/jmxgraphite/conf/logging.xml
 %config %verify(not owner group size md5 mtime) /opt/jmxgraphite/templates/java.json
 %config %verify(not owner group size md5 mtime) /opt/jmxgraphite/templates/tomcat.json
+%config %verify(not owner group size md5 mtime) /opt/jmxgraphite/templates/jboss5.json
 %config %verify(not owner group size md5 mtime) /opt/jmxgraphite/jvms/example.json
 
 %pre
