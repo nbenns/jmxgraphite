@@ -1,0 +1,93 @@
+{
+  "jboss.jca:service=ManagedConnectionPool,name=*": {
+    "attributes": [
+      "AvailableConnectionCount",
+      "ConnectionCount",
+      "ConnectionCreatedCount",
+      "ConnectionDestroyedCount",
+      "InUseConnectionCount",
+      "MaxConnectionsInUseCount",
+      "State"
+    ]
+  },
+  "jboss.web:type=ThreadPool,name=*": {
+    "attributes": [
+      "acceptorThreadCount",
+      "backlog",
+      "currentThreadCount",
+      "currentThreadsBusy",
+      "maxThreads"
+    ]
+  },
+  "jboss.web:type=JspMonitor,name=jsp,WebModule=*,J2EEApplication=*,J2EEServer=*": {
+    "attributes": [
+      "jspCount",
+      "jspReloadCount"
+    ]
+  },
+  "jboss.web:type=GlobalRequestProcessor,name=*": {
+    "attributes": [
+      "bytesReceived",
+      "bytesSent",
+      "errorCount",
+      "maxTime",
+      "processingTime",
+      "requestCount"
+    ]
+  },
+  "jboss.web:type=Cache,host=*,path=*": {
+    "attributes": [
+      "accessCount",
+      "cacheMaxSize",
+      "cacheSize",
+      "desiredEntryAccessRatio",
+      "hitsCount",
+      "maxAllocateIterations",
+      "spareNotFoundEntries"
+    ]
+  },
+  "jboss.web:type=Manager,path=*,host=*": {
+    "attributes": [
+      "activeSessions",
+      "duplicates",
+      "expiredSessions",
+      "maxActive",
+      "maxActiveSessions",
+      "maxInactiveInterval",
+      "processExpiresFrequency",
+      "processingTime",
+      "rejectedSessions",
+      "sessionAverageAliveTime",
+      "sessionCounter",
+      "sessionIdLength",
+      "sessionMaxAliveTime"
+    ]
+  },
+  "jboss.messaging.destination:service=Queue,name=*": {
+    "attributes": [
+      "ConsumerCount",
+      "DeliveringCount",
+      "DownCacheSize",
+      "FullSize",
+      "MessageCount",
+      "PageSize",
+      "ScheduledMessageCount"
+    ]
+  },
+  "jboss.jca:service=WorkManagerThreadPool": {
+    "attributes": [
+      "KeepAliveTime",
+      "MaximumPoolSize",
+      "MaximumQueueSize",
+      "MinimumPoolSize",
+      "PoolNumber",
+      "PoolSize",
+      "QueueSize"
+    ]
+  },
+  "jboss.jca:service=CachedConnectionManager": {
+    "attributes": [
+      "InUseConnections"
+    ]
+  }
+}
