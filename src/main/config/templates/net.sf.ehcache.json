@@ -1,0 +1,47 @@
+{
+  "net.sf.ehcache:type=SampledCacheManager,name=*,node=*": {
+    "attributes": [
+      "CacheAverageSearchTime",
+      "CacheEvictionRate",
+      "CacheExpirationRate",
+      "CacheHitRate",
+      "CacheMissRate",
+      "CachePutRate",
+      "CacheSearchRate",
+      "CacheUpdateRate",
+      "TransactionCommitRate",
+      "TransactionCommittedCount",
+      "TransactionRollbackRate",
+      "TransactionRolledBackCount",
+      "TransactionTimedOutCount",
+      "WriterMaxQueueSize",
+      "WriterQueueLength"
+    ]
+  },
+  "net.sf.ehcache.hibernate:type=EhcacheHibernateStats,name=*,node=*": {
+    "attributes": [
+      "CacheHitCount",
+      "CacheHitRate",
+      "CacheHitSample",
+      "CacheMissCount",
+      "CacheMissRate",
+      "CacheMissSample",
+      "CachePutCount",
+      "CachePutRate",
+      "CachePutSample",
+      "CloseStatementCount",
+      "ConnectCount",
+      "FlushCount",
+      "MaxGetTimeMillis",
+      "MinGetTimeMillis",
+      "OptimisticFailureCount",
+      "PrepareStatementCount",
+      "QueryExecutionCount",
+      "QueryExecutionRate",
+      "SessionCloseCount",
+      "SessionOpenCount",
+      "SuccessfulTransactionCount",
+      "TransactionCount"
+    ]
+  }
+}

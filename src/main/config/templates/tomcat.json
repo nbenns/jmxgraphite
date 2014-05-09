@@ -1,5 +1,5 @@
 {
-  "Catalina:type=Cache,host=*,path=*": {
+  "Catalina:type=Cache,host=*,context=*": {
     "attributes": [
       "accessCount",
       "cacheMaxSize",
@@ -10,7 +10,7 @@
       "spareNotFoundEntries"
     ]
   },
-  "Catalina:type=Connector,port=*,address=*": {
+  "Catalina:type=Connector,port=*": {
     "attributes": [
       "acceptCount",
       "bufferSize",
@@ -26,6 +26,22 @@
       "threadPriority",
     ]
   },
+  "Catalina:type=DataSource,context=*,host=*,class=*,name=*": {
+    "attributes": [
+      "initialSize",
+      "maxActive",
+      "maxIdle",
+      "maxOpenPreparedStatements",
+      "maxWait",
+      "minEvictableIdleTimeMillis",
+      "minIdle",
+      "numActive",
+      "numIdle",
+      "numTestsPerEvictionRun",
+      "removeAbandonedTimeout",
+      "timeBetweenEvictionRunsMillis"
+    ]
+  },
   "Catalina:type=GlobalRequestProcessor,name=*": {
     "attributes": [
       "bytesReceived",
@@ -39,10 +55,12 @@
   "Catalina:type=JspMonitor,name=jsp,WebModule=*,J2EEApplication=*,J2EEServer=*": {
     "attributes": [
       "jspCount",
-      "jspReloadCount"
+      "jspQueueLength",
+      "jspReloadCount",
+      "jspUnloadCount"
     ]
   },
-  "Catalina:type=Manager,path=*,host=*": {
+  "Catalina:type=Manager,context=*,host=*": {
     "attributes": [
       "activeSessions",
       "duplicates",
@@ -61,7 +79,7 @@
       "sessionMaxAliveTime"
     ]
   },
-  "Catalina:type=ProtocolHandler,port=*,address=*": {
+  "Catalina:type=ProtocolHandler,port=*": {
     "attributes": [
       "backlog",
       "compressionMinSize",
@@ -75,6 +93,14 @@
       "threadPriority",
       "timeout",
       "unlockTimeout"
+    ]
+  },
+  "Catalina:type=Realm,realmPath=*": {
+    "attributes": [
+      "cacheRemovalWarningTime",
+      "cacheSize",
+      "failureCount",
+      "lockOutTime"
     ]
   },
   "Catalina:type=RequestProcessor,worker=*,name=*": {
@@ -93,6 +119,30 @@
       "stage"
     ]
   },
+  "Catalina:j2eeType=Servlet,name=*,WebModule=*,J2EEApplication=*,J2EEServer=*": {
+    "attributes": [
+      "available",
+      "backgroundProcessorDelay",
+      "classLoadTime",
+      "countAllocated",
+      "errorCount",
+      "loadOnStartup",
+      "loadTime",
+      "maxInstances",
+      "maxTime",
+      "minTime",
+      "processingTime",
+      "requestCount"
+    ]
+  },
+  "Catalina:type=StringCache": {
+    "attributes": [
+      "accessCount",
+      "cacheSize",
+      "hitCount",
+      "trainThreshold"
+    ]
+  },
   "Catalina:type=ThreadPool,name=*": {
     "attributes": [
       "acceptorThreadCount",
@@ -106,53 +156,15 @@
       "unlockTimeout"
     ]
   },
-  "com.mchange.v2.c3p0:type=PooledDataSource*": {
+  "Catalina:j2eeType=WebModule,name=*,J2EEApplication=*,J2EEServer=*": {
     "attributes": [
-      "acquireIncrement",
-      "acquireRetryAttempts",
-      "acquireRetryDelay",
-      "checkoutTimeout",
-      "effectivePropertyCycleDefaultUser",
-      "idleConnectionTestPeriod",
-      "initialPoolSize",
-      "loginTimeout",
-      "maxAdministrativeTaskTime",
-      "maxConnectionAge",
-      "maxIdleTime",
-      "maxIdleTimeExcessConnections",
-      "maxPoolSize",
-      "maxStatements",
-      "maxStatementsPerConnection",
-      "minPoolSize",
-      "numBusyConnections",
-      "numBusyConnectionsAllUsers",
-      "numBusyConnectionsDefaultUser",
-      "numFailedCheckinsDefaultUser",
-      "numFailedCheckoutsDefaultUser",
-      "numFailedIdleTestsDefaultUser",
-      "numHelperThreads",
-      "numIdleConnections",
-      "numIdleConnectionsAllUsers",
-      "numIdleConnectionsDefaultUser",
-      "numThreadsAwaitingCheckoutDefaultUser",
-      "numUnclosedOrphanedConnections",
-      "numUnclosedOrphanedConnectionsAllUsers",
-      "numUnclosedOrphanedConnectionsDefaultUser",
-      "numUserPools",
-      "propertyCycle",
-      "startTimeMillisDefaultUser",
-      "statementCacheNumCheckedOutDefaultUser",
-      "statementCacheNumCheckedOutStatementsAllUsers",
-      "statementCacheNumConnectionsWithCachedStatementsAllUsers",
-      "statementCacheNumConnectionsWithCachedStatementsDefaultUser",
-      "statementCacheNumStatementsAllUsers",
-      "statementCacheNumStatementsDefaultUser",
-      "threadPoolNumActiveThreads",
-      "threadPoolNumIdleThreads",
-      "threadPoolNumTasksPending",
-      "threadPoolSize",
-      "unreturnedConnectionTimeout",
-      "upTimeMillisDefaultUser"
+      "cacheMaxSize",
+      "cacheObjectMaxSize",
+      "cacheTTL",
+      "processingTime",
+      "sessionTimeout",
+      "tldScanTime",
+      "unloadDelay"
     ]
   }
 }

@@ -1,0 +1,9 @@
+{
+  "java.nio:type=BufferPool,name=*": {
+    "attributes": [
+      "Count",
+      "MemoryUsed",
+      "TotalCapacity"
+    ]
+  }
+}
