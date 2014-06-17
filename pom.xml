@@ -56,6 +56,12 @@
     </dependency>                     
   </dependencies>
   
+  <properties>
+  	<sonar.scm.enabled>true</sonar.scm.enabled>
+	<sonar.forceAnalysis>true</sonar.forceAnalysis>
+	<sonar.dynamicAnalysis>true</sonar.dynamicAnalysis>
+  </properties>
+  
   <build>
     <plugins>
       <plugin>
