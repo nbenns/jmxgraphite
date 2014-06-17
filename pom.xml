@@ -7,6 +7,26 @@
   <description>Send JMX Metrics directly to a Graphite instance over Line protocol</description>
   <packaging>jar</packaging>
   
+  <pluginRepositories>
+	    <pluginRepository>
+		    <id>nexus-public</id>
+            <name>Local mirrored public repos - nexus</name>
+            <url>http://nexus.shared.loyalty.com/nexus/content/groups/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+   
+	<distributionManagement>
+		<repository>
+			<id>inhouse-repo</id>
+            <url>http://nexus.shared.loyalty.com/nexus/content/repositories/inhouse-repo</url>
+        </repository>
+        <snapshotRepository>
+            <id>inhouse-snapshot-repo</id>
+	        <url>http://nexus.shared.loyalty.com/nexus/content/repositories/inhouse-snapshot-repo</url>
+			<uniqueVersion>false</uniqueVersion>			   
+        </snapshotRepository>
+   </distributionManagement>
+  
   <dependencies>
     <dependency>
        <groupId>junit</groupId>
@@ -93,4 +113,12 @@
   	  </plugin>
     </plugins>
   </build>
+  <organization>
+  	<name>Loyalty One</name>
+  	<url>www.loyalty.com</url>
+  </organization>
+  <scm>
+  	<url>https://github.com/polariss0i/jmxgraphite.git</url>
+  	<developerConnection>Nigel Benns</developerConnection>
+  </scm>
 </project>
