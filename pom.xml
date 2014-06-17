@@ -59,7 +59,8 @@
   <properties>
   	<sonar.scm.enabled>true</sonar.scm.enabled>
 	<sonar.forceAnalysis>true</sonar.forceAnalysis>
-	<sonar.dynamicAnalysis>true</sonar.dynamicAnalysis>
+	<sonar.dynamicAnalysis>false</sonar.dynamicAnalysis>
+    <sonar.language>grvy</sonar.language>
   </properties>
   
   <build>
