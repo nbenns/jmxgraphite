@@ -61,6 +61,8 @@
 	<sonar.forceAnalysis>true</sonar.forceAnalysis>
 	<sonar.dynamicAnalysis>false</sonar.dynamicAnalysis>
     <sonar.language>grvy</sonar.language>
+	<sonar.java.coveragePlugin>cobertura</sonar.java.coveragePlugin>
+	<sonar.surefire.reportsPath>${project.build.directory}/surefire-reports</sonar.surefire.reportsPath>
   </properties>
   
   <build>
