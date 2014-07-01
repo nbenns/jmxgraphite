@@ -66,6 +66,7 @@
   </properties>
   
   <build>
+    <sourceDirectory>src/main/groovy</sourceDirectory>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
