@@ -14,12 +14,12 @@ import org.slf4j.LoggerFactory
  *
  */
 class JMXGraphite {
-    def static _globalConf = "conf/global.json"
+    def static _globalConf = 'conf/global.json'
 	def static _sendInterval = 1000
-	def static _graphiteHost = "localhost"
+	def static _graphiteHost = 'localhost'
 	def static _graphitePort = 2003
-	def static _templateDir = "templates"
-	def static _jvmDir = "jvms"
+	def static _templateDir = 'templates'
+	def static _jvmDir = 'jvms'
 	
 	def static _output = []
 	def static _lock = false
@@ -32,14 +32,14 @@ class JMXGraphite {
 			for(int i = 0; i < args.length; i++) {
 				String option = args[i]
 
-				if(option.equals("-c"))
+				if(option.equals('-c'))
 				{
 					_globalConf = args[++i]
 				}
 			}
 		}
 		catch (Exception ex) {
-			_LOG.trace("Exception parsing Startup Arguments", ex)
+			_LOG.trace('Exception parsing Startup Arguments', ex)
 		}
 		
 	}
@@ -55,7 +55,7 @@ class JMXGraphite {
 			}
 			catch (Exception ex) {
 				_LOG.error("Config File ${_globalConf} invalid JSON.")
-				_LOG.trace("Exception parsing Global Config", ex)
+				_LOG.trace('Exception parsing Global Config', ex)
 				System.exit(2)
 			}
 		}
@@ -94,7 +94,7 @@ class JMXGraphite {
 	
 	def static sendUpdate(output) {
 		synchronized(_lock) {
-			_LOG.debug("Updating output")
+			_LOG.debug('Updating output')
 			_output.addAll(output)
 		}
 	}
@@ -110,7 +110,7 @@ class JMXGraphite {
 		def handler
 
 		Signal.handle( new Signal("HUP"), [ handle:{ sig ->
-			_LOG.info("Caught SIGHUP, Reloading configs...")
+			_LOG.info('Caught SIGHUP, Reloading configs...')
 			
 			_JVMs.each {jvm -> jvm.stop()}
 			_JVMs = []
@@ -123,7 +123,7 @@ class JMXGraphite {
 	
 		Runtime.getRuntime().addShutdownHook((Thread)ProxyGenerator.instantiateAggregate([run: {
 			shutdown = true
-			_LOG.info("Shutdown initiated")
+			_LOG.info('Shutdown initiated')
 			_JVMs.each {jvm -> jvm.stop() }
 		}
 		], [Runnable], Thread.class))
@@ -147,8 +147,8 @@ class JMXGraphite {
 					catch (Exception ex) {
 						graphiteLine.close()
 						
-						_LOG.warn("Can't connect to Graphite")
-						_LOG.trace("Graphite Exception", ex)
+						_LOG.warn('Can\'t connect to Graphite')
+						_LOG.trace('Graphite Exception', ex)
 					}
 				}
 				
@@ -174,8 +174,8 @@ class JMXGraphite {
 							graphiteLine.close()
 							graphiteLine.connected = false
 							
-							_LOG.warn("Can't write to Graphite")
-							_LOG.trace("Graphite Exception", ex)
+							_LOG.warn('Can\'t write to Graphite')
+							_LOG.trace('Graphite Exception', ex)
 							dropped++
 						}
 				   
@@ -190,6 +190,6 @@ class JMXGraphite {
 			sleep(_sendInterval)
 		}
 		
-		_LOG.info("Shudown completed")
+		_LOG.info('Shudown completed')
 	}
 }
