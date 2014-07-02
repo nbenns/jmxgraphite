@@ -22,11 +22,11 @@ class JMXGraphite {
 	static _lock = false
 	
 	static _JVMs = []
-	static Logger _LOG = LoggerFactory.getLogger(JMXGraphite)
+	private static final Logger _LOG = LoggerFactory.getLogger(JMXGraphite)
 	
 	static parse(args) {
 		try {
-			for(int i = 0; i < args.length; i++) {
+			for (int i = 0; i < args.length; i++) {
 				String option = args[i]
 
 				if (option.equals('-c'))
@@ -73,7 +73,7 @@ class JMXGraphite {
 			
 		if (jdir.exists()) {
 			def files = []
-			files = jdir.list( [accept: { d, f -> f ==~ /.*\.json$/ }] as FilenameFilter)
+			files = jdir.list( [accept: { d, f -> f ==~ /.*\.json$/ } ] as FilenameFilter)
 
 			files.each { fname ->
 				def name = fname.tokenize('.')[0]

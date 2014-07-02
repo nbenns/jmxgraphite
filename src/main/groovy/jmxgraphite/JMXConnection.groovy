@@ -16,8 +16,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class JMXConnection extends Thread {
-	static Logger _LOG = LoggerFactory.getLogger(JMXGraphite)
-	private _templateDir = ''
+	private static final Logger _LOG = LoggerFactory.getLogger(JMXGraphite)
+	private final _templateDir = ''
 	private _interval = 60 * 1000
 	
     private JMXConnector _Connector = null
@@ -243,7 +243,7 @@ class JMXConnection extends Thread {
 				def objName = tmpName2[0].split(':')[0]
 				
 				tmpName2.eachWithIndex { t, i ->
-					if (i % 2 == 1) objName += '.' + t.replace('.', '_').replace(' ', '_').replace('[', '').replace(']', '').replace('"', '')
+					if (i & 2 == 1) objName += '.' + t.replace('.', '_').replace(' ', '_').replace('[', '').replace(']', '').replace('"', '')
 				}
 
 				if (MBAttrs instanceof HashMap) {

@@ -14,7 +14,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class Encryption {
-	static Logger LOG = LoggerFactory.getLogger(JMXGraphite)
+	private static final Logger LOG = LoggerFactory.getLogger(JMXGraphite)
 	
 	static final byte[] salt = [ 0xF, 0x1, 0xA, 0x0, 0xB, 0x3, 0xC, 0xF ]
     static final byte[] KEY = [ -115, 84, 27, -75, -68, 23, 50, 87, 21, 90, 93, 74, 37, -82, 105, -52 ]
