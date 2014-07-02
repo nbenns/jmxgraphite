@@ -19,7 +19,7 @@ class JMXGraphite {
 	static _jvmDir = 'jvms'
 	
 	static _output = []
-	static _lock = false
+	static _lock = new Object()
 	
 	static _JVMs = []
 	private static final Logger _LOG = LoggerFactory.getLogger(JMXGraphite)
