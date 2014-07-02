@@ -1,27 +1,20 @@
 package jmxgraphite
 
-import java.io.File
-import java.nio.ByteBuffer
 import java.security.Key
 import java.security.spec.KeySpec
 import java.security.AlgorithmParameters
-
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 import javax.crypto.spec.IvParameterSpec
-
 import org.apache.commons.codec.binary.Base64
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import org.slf4j.Logger
-
 class Encryption {
-	static Logger LOG = LoggerFactory.getLogger(JMXGraphite.class)
+	static Logger LOG = LoggerFactory.getLogger(JMXGraphite)
 	
 	static final byte[] salt = [ 0xF, 0x1, 0xA, 0x0, 0xB, 0x3, 0xC, 0xF ]
     static final byte[] KEY = [ -115, 84, 27, -75, -68, 23, 50, 87, 21, 90, 93, 74, 37, -82, 105, -52 ]
@@ -44,7 +37,7 @@ class Encryption {
 		cipher.init(Cipher.ENCRYPT_MODE, secret, ivspec)
 		AlgorithmParameters params = cipher.parameters
 		
-		return new String(Base64.encodeBase64(cipher.doFinal(password.getBytes('UTF-8'))))
+		new String(Base64.encodeBase64(cipher.doFinal(password.getBytes('UTF-8'))))
 	}
 	
 	static Decrypt(password) {
@@ -55,6 +48,6 @@ class Encryption {
 		cipher.init(Cipher.DECRYPT_MODE, secret, ivspec)
 		AlgorithmParameters params = cipher.parameters
 		
-		return new String(cipher.doFinal(Base64.decodeBase64(password.getBytes('UTF-8'))))
+		new String(cipher.doFinal(Base64.decodeBase64(password.getBytes('UTF-8'))))
 	}
 }

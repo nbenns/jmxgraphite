@@ -2,15 +2,10 @@ package jmxgraphite
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonBuilder
-import java.util.regex.Matcher
-import java.lang.Thread
 import javax.management.MBeanServerConnection
 import javax.management.ObjectName
-import javax.management.Query
-import javax.management.OperationsException
 import javax.management.openmbean.CompositeData
 import javax.management.openmbean.CompositeDataSupport
-import javax.management.openmbean.CompositeType
 import javax.management.remote.JMXConnector
 import javax.management.remote.JMXConnectorFactory
 import javax.management.remote.JMXServiceURL
@@ -21,9 +16,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class JMXConnection extends Thread {
-	static Logger _LOG = LoggerFactory.getLogger(JMXGraphite.class)
+	static Logger _LOG = LoggerFactory.getLogger(JMXGraphite)
 	private _templateDir = ''
-	private _interval = 60*1000
+	private _interval = 60 * 1000
 	
     private JMXConnector _Connector = null
 	private MBeanServerConnection _Connection
@@ -90,7 +85,7 @@ class JMXConnection extends Thread {
 			_JMXUrl = new JMXServiceURL(c.service_url)
 			_ConnectionProperties = new HashMap<String,Object>()
 
-			if(c.username != null)
+			if (c.username != null)
 			{
 				_ConnectionProperties.put(JMXConnector.CREDENTIALS, [c.username, Encryption.Decrypt(c.password)] as String[])
 			}
@@ -165,7 +160,7 @@ class JMXConnection extends Thread {
 			_Connection.mBeanCount
 			connected = true
 		}
-		catch(Exception ex) {
+		catch (Exception ex) {
 			_LOG.info("Got disconnected from ${_JMXUrl}")
 			_LOG.trace('Exception calling getMBeanCount()', ex)
 			
@@ -190,11 +185,11 @@ class JMXConnection extends Thread {
 			}
 		}
 		
-		return connected
+		connected
 	}
 	
 	private Disconnect() {
-		if(_Connector != null)
+		if (_Connector != null)
 		{
 			_LOG.info("Disconnecting from ${_JMXUrl}")
 			try {
@@ -307,6 +302,6 @@ class JMXConnection extends Thread {
 			}
 		}
 		
-		return Output
+		Output
 	}
 }

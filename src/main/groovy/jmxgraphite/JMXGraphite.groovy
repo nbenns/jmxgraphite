@@ -1,12 +1,8 @@
 package jmxgraphite
 
 import groovy.json.JsonSlurper
-
-import java.io.FilenameFilter
-
 import sun.misc.Signal
 import sun.misc.SignalHandler
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -26,14 +22,14 @@ class JMXGraphite {
 	static _lock = false
 	
 	static _JVMs = []
-	static Logger _LOG = LoggerFactory.getLogger(JMXGraphite.class)
+	static Logger _LOG = LoggerFactory.getLogger(JMXGraphite)
 	
 	static parse(args) {
 		try {
 			for(int i = 0; i < args.length; i++) {
 				String option = args[i]
 
-				if(option.equals('-c'))
+				if (option.equals('-c'))
 				{
 					_globalConf = args[++i]
 				}
@@ -49,7 +45,7 @@ class JMXGraphite {
 		def config
 		def inputFile = new File(_globalConf)
 		
-		if(inputFile.exists()) {
+		if (inputFile.exists()) {
 			try {
 				_LOG.info("Loading main config ${_globalConf}")
 				config = new JsonSlurper().parseText(inputFile.text)
@@ -128,7 +124,7 @@ class JMXGraphite {
 			_LOG.info('Shutdown initiated')
 			_JVMs.each { jvm -> jvm.stop() }
 		}
-		], [Runnable], Thread.class))
+		], [Runnable], Thread))
 		
 		_LOG.debug("Graphite Send Interval: ${_sendInterval}")
 		
