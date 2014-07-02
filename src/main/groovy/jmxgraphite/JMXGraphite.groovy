@@ -1,8 +1,6 @@
-package jmxgraphite;
+package jmxgraphite
 
-import java.io.ObjectInputStream.ValidationList
 import groovy.json.JsonSlurper
-import groovy.io.FileType
 import java.io.FilenameFilter
 import sun.misc.Signal
 import sun.misc.SignalHandler
@@ -24,7 +22,7 @@ class JMXGraphite {
 	def static _output = []
 	def static _lock = false
 	
-	def static _JVMs = [];
+	def static _JVMs = []
 	def static Logger _LOG = LoggerFactory.getLogger(JMXGraphite.class)
 	
 	def static parse(args) {
@@ -45,7 +43,7 @@ class JMXGraphite {
 	}
 	
 	def static loadMainConfig() {
-		def config;
+		def config
 		def inputFile = new File(_globalConf)
 		
 		if(inputFile.exists()) {
@@ -109,7 +107,7 @@ class JMXGraphite {
 		def shutdown = false
 		def handler
 
-		Signal.handle( new Signal("HUP"), [ handle:{ sig ->
+		Signal.handle( new Signal('HUP'), [ handle:{ sig ->
 			_LOG.info('Caught SIGHUP, Reloading configs...')
 			
 			_JVMs.each {jvm -> jvm.stop()}

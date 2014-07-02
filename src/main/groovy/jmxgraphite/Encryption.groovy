@@ -27,34 +27,34 @@ class Encryption {
     def static final byte[] KEY = [ -115, 84, 27, -75, -68, 23, 50, 87, 21, 90, 93, 74, 37, -82, 105, -52 ]
 	def static final byte[] IV = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
 	
-	def static file = "default"
+	def static file = 'default'
 	def static pass = null
 	
 	def static Encrypt(password) {
-		/*SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-		KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
-		SecretKey tmp = factory.generateSecret(spec);
-		println tmp.getEncoded();*/
+		/*SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1")
+		KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256)
+		SecretKey tmp = factory.generateSecret(spec)
+		println tmp.getEncoded()*/
 		
 		
 		IvParameterSpec ivspec = new IvParameterSpec(IV)
-		SecretKey secret = new SecretKeySpec(KEY, "AES")
+		SecretKey secret = new SecretKeySpec(KEY, 'AES')
 		
-		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+		Cipher cipher = Cipher.getInstance('AES/CBC/PKCS5Padding')
 		cipher.init(Cipher.ENCRYPT_MODE, secret, ivspec)
 		AlgorithmParameters params = cipher.getParameters()
 		
-		return new String(Base64.encodeBase64(cipher.doFinal(password.getBytes("UTF-8"))))
+		return new String(Base64.encodeBase64(cipher.doFinal(password.getBytes('UTF-8'))))
 	}
 	
 	def static Decrypt(password) {
 		IvParameterSpec ivspec = new IvParameterSpec(IV)
-		SecretKey secret = new SecretKeySpec(KEY, "AES")
+		SecretKey secret = new SecretKeySpec(KEY, 'AES')
 		
-		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+		Cipher cipher = Cipher.getInstance('AES/CBC/PKCS5Padding')
 		cipher.init(Cipher.DECRYPT_MODE, secret, ivspec)
 		AlgorithmParameters params = cipher.getParameters()
 		
-		return new String(cipher.doFinal(Base64.decodeBase64(password.getBytes("UTF-8"))))
+		return new String(cipher.doFinal(Base64.decodeBase64(password.getBytes('UTF-8'))))
 	}
 }

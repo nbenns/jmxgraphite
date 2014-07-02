@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory
 
 class JMXConnection extends Thread {
 	def static Logger _LOG = LoggerFactory.getLogger(JMXGraphite.class)
-	private _templateDir = ""
+	private _templateDir = ''
 	private _interval = 60*1000
 	
     private JMXConnector _Connector = null
@@ -46,7 +46,7 @@ class JMXConnection extends Thread {
 					c.pass_encrypted = true
 					
 					String newJson = new JsonBuilder(c).toPrettyString()
-					f.withWriter( 'UTF-8' ) { it << newJson }
+					f.withWriter('UTF-8') { it << newJson }
 					
 					_LOG.info("Rewriting ${fname} with encrypted password.")
 				}
@@ -82,7 +82,7 @@ class JMXConnection extends Thread {
 					}
 				}
 			}
-			else _LOG.info("No templates")
+			else _LOG.info('No templates')
 					
 			_MBeans = c.mbeans
 			_Prefix = c.graphite_prefix
@@ -102,7 +102,7 @@ class JMXConnection extends Thread {
 				SslRMIServerSocketFactory ssf = new SslRMIServerSocketFactory()
 				_ConnectionProperties.put(RMIConnectorServer.RMI_CLIENT_SOCKET_FACTORY_ATTRIBUTE, csf)
 				_ConnectionProperties.put(RMIConnectorServer.RMI_SERVER_SOCKET_FACTORY_ATTRIBUTE, ssf)
-				_ConnectionProperties.put("com.sun.jndi.rmi.factory.socket", csf)
+				_ConnectionProperties.put('com.sun.jndi.rmi.factory.socket', csf)
 			}
 
 			// This is for using External Jars for connecting to WebLogic, etc.
@@ -152,11 +152,11 @@ class JMXConnection extends Thread {
 				_LOG.info("Connecting to ${_JMXUrl}")
 				_Connector = JMXConnectorFactory.connect(_JMXUrl, _ConnectionProperties)
 				_Connection = _Connector.getMBeanServerConnection()
-				_LOG.info("Connected Successfully.")
+				_LOG.info('Connected Successfully.')
 			}
 			catch (Exception ex) {
 				_LOG.debug("Can't get initial connection to ${_JMXUrl}")
-				_LOG.trace("Exception calling getMBeanServerConnection():", ex)
+				_LOG.trace('Exception calling getMBeanServerConnection():', ex)
 				return false
 			}
 		}
@@ -167,7 +167,7 @@ class JMXConnection extends Thread {
 		}
 		catch(Exception ex) {
 			_LOG.info("Got disconnected from ${_JMXUrl}")
-			_LOG.trace("Exception calling getMBeanCount()", ex)
+			_LOG.trace('Exception calling getMBeanCount()', ex)
 			
 			for (int c = 1; c < 4; c++)
 			{
@@ -175,12 +175,12 @@ class JMXConnection extends Thread {
 				try {
 					_Connector.connect(ConnectionProperties)
 					connected = true
-					_LOG.info("Reconnected Successfully.")
+					_LOG.info('Reconnected Successfully.')
 					break
 				}
 				catch (Exception ex2) {
 					_LOG.warn("Unable to Connect to ${_JMXUrl}")
-					_LOG.trace("Exception while connecting:", ex2)
+					_LOG.trace('Exception while connecting:', ex2)
 					if (c < 3) {
 						def backoff = Math.pow(10, c)
 						_LOG.info("Backing off ${(int)backoff} ms")
@@ -201,7 +201,7 @@ class JMXConnection extends Thread {
 				_Connector.close()
 			}
 			catch (Exception ex) {
-				_LOG.trace("Exception while disconnecting:", ex)
+				_LOG.trace('Exception while disconnecting:', ex)
 			}
 			finally {
 				_Connector = null
@@ -219,7 +219,7 @@ class JMXConnection extends Thread {
 		}
 		
 		// Pre-load just in case queryNames doesn't support "*" 
-		if (_allMBeans == null) _allMBeans = _Connection.queryNames(new ObjectName(""), null)
+		if (_allMBeans == null) _allMBeans = _Connection.queryNames(new ObjectName(''), null)
 		
 		_MBeans.each {MBName, MBAttrs ->
 			def obj = new ObjectName(MBName)
@@ -231,13 +231,13 @@ class JMXConnection extends Thread {
 			catch (Exception ex) {
 				// WebLogic domainruntime service doesn't support queryNames with "*"
 				// we need to use "" and then find the names ourselves :(
-				_LOG.trace("Exception on queryNames():", ex)
+				_LOG.trace('Exception on queryNames():', ex)
 				def q = MBName.replaceAll(/\*/,'.*')
 				mBeans = _allMBeans.grep(~/${q}/)
 			}
 			
 			mBeans.each { mb ->
-				def String[] tmpName1 = mb.toString().split(",")
+				def String[] tmpName1 = mb.toString().split(',')
 				def tmpName2 = []
 				
 				tmpName1.each { s ->
@@ -245,15 +245,15 @@ class JMXConnection extends Thread {
 					tmpName2.addAll(a)
 				}
 							
-				def objName = tmpName2[0].split(":")[0]
+				def objName = tmpName2[0].split(':')[0]
 				
 				tmpName2.eachWithIndex {t, i ->
-					if (i % 2 == 1) objName += "." + t.replace('.', '_').replace(' ', '_').replace('[', '').replace(']', '').replace('"', '')
+					if (i % 2 == 1) objName += '.' + t.replace('.', '_').replace(' ', '_').replace('[', '').replace(']', '').replace('"', '')
 				}
 
 				if (MBAttrs instanceof HashMap) {
 					MBAttrs.each {CDSName, CDSAttrs ->
-						if (CDSName == "attributes") {
+						if (CDSName == 'attributes') {
 							try {
 								def values = _Connection.getAttributes(mb, CDSAttrs as String[])
 								def time = (int)(System.currentTimeMillis() / 1000)
@@ -264,7 +264,7 @@ class JMXConnection extends Thread {
 							}
 							catch (Exception ex) {
 								_LOG.warn("Type not compatible with configuration: ${mb.toString()} - ${CDSAttrs}")
-								_LOG.trace("Printing StackTrace:", ex)
+								_LOG.trace('Printing StackTrace:', ex)
 							}
 						}
 						else {
@@ -281,7 +281,7 @@ class JMXConnection extends Thread {
 								}
 								catch (Exception ex1) {
 									_LOG.warn("All properties not found getting individually: ${mb.toString()} - ${CDSName} - ${CDSAttrs}")
-									_LOG.trace("Printing StackTrace:", ex1)
+									_LOG.trace('Printing StackTrace:', ex1)
 									
 									def time = (int)(System.currentTimeMillis() / 1000)
 									
@@ -292,14 +292,14 @@ class JMXConnection extends Thread {
 										}
 										catch (Exception ex2) {
 											_LOG.warn("Type not found or not compatible with configuration: ${mb.toString()} - ${CDSName} - ${a}")
-											_LOG.trace("Printing StackTrace:", ex2)
+											_LOG.trace('Printing StackTrace:', ex2)
 										}
 									}
 								}
 							}
 							catch (Exception ex) {
 								_LOG.warn("Type not found or not compatible with configuration: ${mb.toString()} - ${CDSName}")
-								_LOG.trace("Printing StackTrace:", ex)
+								_LOG.trace('Printing StackTrace:', ex)
 							}
 						}
 					}
