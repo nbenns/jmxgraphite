@@ -21,7 +21,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class JMXConnection extends Thread {
-	def static Logger _LOG = LoggerFactory.getLogger(JMXGraphite.class)
+	static Logger _LOG = LoggerFactory.getLogger(JMXGraphite.class)
 	private _templateDir = ''
 	private _interval = 60*1000
 	
@@ -32,7 +32,7 @@ class JMXConnection extends Thread {
 	private _MBeans, _Prefix
 	private _allMBeans = null
 	
-	def private LoadConfig(fname) {
+	private LoadConfig(fname) {
 		def f = new File(fname)
 		
 		try {
@@ -117,7 +117,7 @@ class JMXConnection extends Thread {
 		}
 	}
 	
-	def JMXConnection(name, tmplDir, f) {
+	JMXConnection(name, tmplDir, f) {
 		this.setName(name)
 		_templateDir = tmplDir
 		
@@ -125,7 +125,7 @@ class JMXConnection extends Thread {
 		LoadConfig(f)
 	}
 
-	def void run() {
+	void run() {
 		_LOG.info("Check Interval: ${_interval}")
 		
 		while (true) {
@@ -144,7 +144,7 @@ class JMXConnection extends Thread {
 		}
 	}
 	
-	def private Connect() {
+	private Connect() {
 		def connected = false
 		
 		if (_Connector == null) {
@@ -193,7 +193,7 @@ class JMXConnection extends Thread {
 		return connected
 	}
 	
-	def private Disconnect() {
+	private Disconnect() {
 		if(_Connector != null)
 		{
 			_LOG.info("Disconnecting from ${_JMXUrl}")
@@ -209,7 +209,7 @@ class JMXConnection extends Thread {
 		}
 	}
 	
-	def private Discover() {
+	private Discover() {
 		def Output = []
 		
 		if (!Connect()) {

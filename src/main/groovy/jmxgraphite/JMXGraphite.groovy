@@ -12,20 +12,20 @@ import org.slf4j.LoggerFactory
  *
  */
 class JMXGraphite {
-    def static _globalConf = 'conf/global.json'
-	def static _sendInterval = 1000
-	def static _graphiteHost = 'localhost'
-	def static _graphitePort = 2003
-	def static _templateDir = 'templates'
-	def static _jvmDir = 'jvms'
+    static _globalConf = 'conf/global.json'
+	static _sendInterval = 1000
+	static _graphiteHost = 'localhost'
+	static _graphitePort = 2003
+	static _templateDir = 'templates'
+	static _jvmDir = 'jvms'
 	
-	def static _output = []
-	def static _lock = false
+	static _output = []
+	static _lock = false
 	
-	def static _JVMs = []
-	def static Logger _LOG = LoggerFactory.getLogger(JMXGraphite.class)
+	static _JVMs = []
+	static Logger _LOG = LoggerFactory.getLogger(JMXGraphite.class)
 	
-	def static parse(args) {
+	static parse(args) {
 		try {
 			for(int i = 0; i < args.length; i++) {
 				String option = args[i]
@@ -42,7 +42,7 @@ class JMXGraphite {
 		
 	}
 	
-	def static loadMainConfig() {
+	static loadMainConfig() {
 		def config
 		def inputFile = new File(_globalConf)
 		
@@ -69,7 +69,7 @@ class JMXGraphite {
 		if (config.jvmdir != null) _jvmDir = config.jvmdir
 	}
 	
-	def static loadJVMs() {
+	static loadJVMs() {
 		def jdir = new File(_jvmDir)
 			
 		if (jdir.exists()) {
@@ -90,14 +90,14 @@ class JMXGraphite {
 		}
 	}
 	
-	def static sendUpdate(output) {
+	static sendUpdate(output) {
 		synchronized(_lock) {
 			_LOG.debug('Updating output')
 			_output.addAll(output)
 		}
 	}
 	
-	def static main(args) {
+	static main(args) {
 		parse(args)
 		loadMainConfig()
 		loadJVMs()
