@@ -42,7 +42,7 @@ class Encryption {
 		
 		Cipher cipher = Cipher.getInstance('AES/CBC/PKCS5Padding')
 		cipher.init(Cipher.ENCRYPT_MODE, secret, ivspec)
-		AlgorithmParameters params = cipher.getParameters()
+		AlgorithmParameters params = cipher.parameters
 		
 		return new String(Base64.encodeBase64(cipher.doFinal(password.getBytes('UTF-8'))))
 	}
@@ -53,7 +53,7 @@ class Encryption {
 		
 		Cipher cipher = Cipher.getInstance('AES/CBC/PKCS5Padding')
 		cipher.init(Cipher.DECRYPT_MODE, secret, ivspec)
-		AlgorithmParameters params = cipher.getParameters()
+		AlgorithmParameters params = cipher.parameters
 		
 		return new String(cipher.doFinal(Base64.decodeBase64(password.getBytes('UTF-8'))))
 	}

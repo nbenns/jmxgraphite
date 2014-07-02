@@ -58,7 +58,7 @@ class JMXConnection extends Thread {
 			
 			if (c.templates instanceof ArrayList) {
 						
-				c.templates.each{ t ->
+				c.templates.each { t ->
 					def tf = new File("${_templateDir}/${t}.json")
 							  
 					if (tf.exists()) {
@@ -67,7 +67,7 @@ class JMXConnection extends Thread {
 						try {
 							def d = new JsonSlurper().parseText(tf.text)
 									
-							d.each{ k, v ->
+							d.each { k, v ->
 								_LOG.debug("Adding ${k}")
 								c.mbeans[k] = v
 							}
@@ -151,7 +151,7 @@ class JMXConnection extends Thread {
 			try {
 				_LOG.info("Connecting to ${_JMXUrl}")
 				_Connector = JMXConnectorFactory.connect(_JMXUrl, _ConnectionProperties)
-				_Connection = _Connector.getMBeanServerConnection()
+				_Connection = _Connector.mBeanServerConnection
 				_LOG.info('Connected Successfully.')
 			}
 			catch (Exception ex) {
@@ -162,7 +162,7 @@ class JMXConnection extends Thread {
 		}
 		
 		try {
-			_Connection.getMBeanCount()
+			_Connection.mBeanCount
 			connected = true
 		}
 		catch(Exception ex) {
@@ -259,7 +259,7 @@ class JMXConnection extends Thread {
 								def time = (int)(System.currentTimeMillis() / 1000)
 
 								values.each { javax.management.Attribute v ->
-									Output.add("${_Prefix}.${objName}.${v.getName()} ${v.getValue()} ${time}")
+									Output.add("${_Prefix}.${objName}.${v.name} ${v.value} ${time}")
 								}
 							}
 							catch (Exception ex) {

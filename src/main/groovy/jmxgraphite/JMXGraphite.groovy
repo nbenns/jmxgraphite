@@ -1,9 +1,12 @@
 package jmxgraphite
 
 import groovy.json.JsonSlurper
+
 import java.io.FilenameFilter
+
 import sun.misc.Signal
 import sun.misc.SignalHandler
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -74,9 +77,9 @@ class JMXGraphite {
 			
 		if (jdir.exists()) {
 			def files = []
-			files = jdir.list( [accept:{ d, f -> f ==~ /.*\.json$/ }] as FilenameFilter)
+			files = jdir.list( [accept: { d, f -> f ==~ /.*\.json$/ }] as FilenameFilter)
 
-			files.each{ fname ->
+			files.each { fname ->
 				def name = fname.tokenize('.')[0]
 				def jvm = new JMXConnection(name, _templateDir, "${_jvmDir}/${fname}")
 				
@@ -107,7 +110,7 @@ class JMXGraphite {
 		def shutdown = false
 		def handler
 
-		Signal.handle( new Signal('HUP'), [ handle:{ sig ->
+		Signal.handle( new Signal('HUP'), [ handle: { sig ->
 			_LOG.info('Caught SIGHUP, Reloading configs...')
 			
 			_JVMs.each { jvm -> jvm.stop() }
@@ -119,7 +122,8 @@ class JMXGraphite {
 			if (handler) handler.handle(sig)
 		} ] as SignalHandler )
 	
-		Runtime.getRuntime().addShutdownHook((Thread)ProxyGenerator.instantiateAggregate([run: {
+		//Runtime.getRuntime().addShutdownHook((Thread)ProxyGenerator.instantiateAggregate([run: {
+		Runtime.runtime.addShutdownHook((Thread)ProxyGenerator.instantiateAggregate([run: {
 			shutdown = true
 			_LOG.info('Shutdown initiated')
 			_JVMs.each { jvm -> jvm.stop() }
@@ -159,7 +163,8 @@ class JMXGraphite {
 						_LOG.debug(o)
 						try {
 							if (graphiteLine.connected) {
-								def graphite = new BufferedWriter(new OutputStreamWriter(graphiteLine.getOutputStream()))
+								//def graphite = new BufferedWriter(new OutputStreamWriter(graphiteLine.getOutputStream()))
+								def graphite = new BufferedWriter(new OutputStreamWriter(graphiteLine.outputStream))
 								
 								graphite.writeLine(o)
 								graphite.flush()
