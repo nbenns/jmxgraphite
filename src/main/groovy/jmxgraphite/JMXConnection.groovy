@@ -243,7 +243,7 @@ class JMXConnection extends Thread {
 				def objName = tmpName2[0].split(':')[0]
 				
 				tmpName2.eachWithIndex { t, i ->
-					if (i & 2 == 1) objName += '.' + t.replace('.', '_').replace(' ', '_').replace('[', '').replace(']', '').replace('"', '')
+					if ((i & 2) == 1) objName += '.' + t.replace('.', '_').replace(' ', '_').replace('[', '').replace(']', '').replace('"', '')
 				}
 
 				if (MBAttrs instanceof HashMap) {
