@@ -67,7 +67,7 @@ class JMXConnection extends Thread {
 						try {
 							def d = new JsonSlurper().parseText(tf.text)
 									
-							d.each{k,v ->
+							d.each{ k, v ->
 								_LOG.debug("Adding ${k}")
 								c.mbeans[k] = v
 							}
@@ -221,7 +221,7 @@ class JMXConnection extends Thread {
 		// Pre-load just in case queryNames doesn't support "*" 
 		if (_allMBeans == null) _allMBeans = _Connection.queryNames(new ObjectName(''), null)
 		
-		_MBeans.each {MBName, MBAttrs ->
+		_MBeans.each { MBName, MBAttrs ->
 			def obj = new ObjectName(MBName)
 			def mBeans
 			
@@ -247,18 +247,18 @@ class JMXConnection extends Thread {
 							
 				def objName = tmpName2[0].split(':')[0]
 				
-				tmpName2.eachWithIndex {t, i ->
+				tmpName2.eachWithIndex { t, i ->
 					if (i % 2 == 1) objName += '.' + t.replace('.', '_').replace(' ', '_').replace('[', '').replace(']', '').replace('"', '')
 				}
 
 				if (MBAttrs instanceof HashMap) {
-					MBAttrs.each {CDSName, CDSAttrs ->
+					MBAttrs.each { CDSName, CDSAttrs ->
 						if (CDSName == 'attributes') {
 							try {
 								def values = _Connection.getAttributes(mb, CDSAttrs as String[])
 								def time = (int)(System.currentTimeMillis() / 1000)
 
-								values.each {javax.management.Attribute v ->
+								values.each { javax.management.Attribute v ->
 									Output.add("${_Prefix}.${objName}.${v.getName()} ${v.getValue()} ${time}")
 								}
 							}
@@ -275,7 +275,7 @@ class JMXConnection extends Thread {
 									def time = (int)(System.currentTimeMillis() / 1000)
 									def values = cds.getAll(CDSAttrs as String[])
 								
-									values.eachWithIndex {v,i ->
+									values.eachWithIndex { v, i ->
 										Output.add("${_Prefix}.${objName}.${CDSName}.${CDSAttrs[i].toString()} ${v} ${time}")
 									}
 								}

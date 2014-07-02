@@ -74,7 +74,7 @@ class JMXGraphite {
 			
 		if (jdir.exists()) {
 			def files = []
-			files = jdir.list( [accept:{d, f-> f ==~ /.*\.json$/ }] as FilenameFilter)
+			files = jdir.list( [accept:{ d, f -> f ==~ /.*\.json$/ }] as FilenameFilter)
 
 			files.each{ fname ->
 				def name = fname.tokenize('.')[0]
@@ -110,7 +110,7 @@ class JMXGraphite {
 		Signal.handle( new Signal('HUP'), [ handle:{ sig ->
 			_LOG.info('Caught SIGHUP, Reloading configs...')
 			
-			_JVMs.each {jvm -> jvm.stop()}
+			_JVMs.each { jvm -> jvm.stop() }
 			_JVMs = []
 
 			loadMainConfig()
@@ -122,7 +122,7 @@ class JMXGraphite {
 		Runtime.getRuntime().addShutdownHook((Thread)ProxyGenerator.instantiateAggregate([run: {
 			shutdown = true
 			_LOG.info('Shutdown initiated')
-			_JVMs.each {jvm -> jvm.stop() }
+			_JVMs.each { jvm -> jvm.stop() }
 		}
 		], [Runnable], Thread.class))
 		
