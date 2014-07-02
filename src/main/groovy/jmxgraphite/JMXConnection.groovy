@@ -42,14 +42,13 @@ class JMXConnection extends Thread {
 					
 					String newJson = new JsonBuilder(c).toPrettyString()
 					
+					_LOG.info("Rewriting ${fname} with encrypted password.")
 					try {
 						f.withWriter('UTF-8') { it << newJson }
 					}
 					catch (IOException ex) {
 						_LOG.warn("Can't write to file ${fname}")
 					}
-						
-					_LOG.info("Rewriting ${fname} with encrypted password.")
 				}
 				else {
 					_LOG.warn("No password for JVM ${fname} -- skipping")
