@@ -150,7 +150,7 @@ class JMXConnection extends Thread {
 			try {
 				_LOG.info("Connecting to ${_JMXUrl}")
 				_Connector = JMXConnectorFactory.connect(_JMXUrl, _ConnectionProperties)
-				_Connection = _Connector.mBeanServerConnection
+				_Connection = _Connector.getMBeanServerConnection()
 				_LOG.info('Connected Successfully.')
 			}
 			catch (Exception ex) {
